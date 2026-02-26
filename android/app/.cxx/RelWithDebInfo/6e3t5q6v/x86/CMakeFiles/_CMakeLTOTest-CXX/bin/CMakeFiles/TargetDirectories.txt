@@ -1,4 +1,0 @@
-D:/ReactNative/StartrackApp/android/app/.cxx/RelWithDebInfo/6e3t5q6v/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir
-D:/ReactNative/StartrackApp/android/app/.cxx/RelWithDebInfo/6e3t5q6v/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir
-D:/ReactNative/StartrackApp/android/app/.cxx/RelWithDebInfo/6e3t5q6v/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/edit_cache.dir
-D:/ReactNative/StartrackApp/android/app/.cxx/RelWithDebInfo/6e3t5q6v/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/rebuild_cache.dir

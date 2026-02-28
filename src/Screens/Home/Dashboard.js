@@ -1,33 +1,4 @@
 /* eslint-disable react-native/no-inline-styles */
-// /* eslint-disable react-native/no-inline-styles */
-// import { StyleSheet, Text, View } from 'react-native';
-// import React from 'react';
-// import { SafeAreaView } from 'react-native-safe-area-context';
-// import normalise from '../../Utils/Dimen';
-// import MyStatusBar from '../../Utils/StatusBar';
-
-// export default function Dashboard() {
-//   return (
-//     <SafeAreaView style={{ flex: 1 }}>
-//       <MyStatusBar barStyle={'dark-content'} />
-//       <View
-//         style={{
-//           flex: 1,
-//           width: '100%',
-//           height: '100%',
-//           justifyContent: 'center',
-//           alignItems: 'center',
-//         }}
-//       >
-//         <Text>Dashboard</Text>
-//       </View>
-//     </SafeAreaView>
-//   );
-// }
-
-// const styles = StyleSheet.create({});
-
-//client id -
 
 import React from 'react';
 import {
@@ -43,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors } from '../../Themes/Themes';
 import { DASHBOARD_NAVIGATION } from '../../Navigation/route_names';
+import { getLogout } from '../../redux/action/AuthAction';
+import { useDispatch } from 'react-redux';
 
 const MENU = [
   {
@@ -51,7 +24,12 @@ const MENU = [
     icon: 'plus-circle-outline',
     path: DASHBOARD_NAVIGATION.app_grid_add_expense_screen,
   },
-  { id: 2, title: 'My Expenses', icon: 'file-document-outline', path: '' },
+  {
+    id: 2,
+    title: 'My Expenses',
+    icon: 'file-document-outline',
+    path: DASHBOARD_NAVIGATION.app_grid_my_expence,
+  },
   { id: 3, title: 'Employees', icon: 'clock-outline', path: '' },
   { id: 4, title: 'Approved', icon: 'check-circle-outline', path: '' },
   { id: 5, title: 'Rejected', icon: 'close-circle-outline', path: '' },
@@ -60,6 +38,7 @@ const MENU = [
 
 export default function Dashboard(props) {
   const isDarkMode = useColorScheme() === 'dark';
+  const dispatch = useDispatch();
   return (
     <SafeAreaView style={styles.container}>
       <MyStatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
@@ -85,7 +64,7 @@ export default function Dashboard(props) {
         <View style={{ flexDirection: 'row' }}>
           <TouchableOpacity
             style={{ marginRight: normalise(20) }}
-            onPress={() => console.log('object')}
+            onPress={() => dispatch(getLogout())}
           >
             <Icon name={'account'} size={32} color={Colors.white} />
           </TouchableOpacity>

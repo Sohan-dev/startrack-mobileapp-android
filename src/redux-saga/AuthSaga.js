@@ -6,23 +6,24 @@ import { GET, POST, getToken } from './setup/method';
 
 function* getSignin(action) {
   try {
-    let response = yield call(POST, 'client-login', action.payload, '');
+    console.log(action.payload, '....login resp');
+    // let response = yield call(POST, 'client-login', action.payload, '');
     yield put({
       type: AUTH.LOGIN_SUCCESS.type,
       data: {
-        [AUTH.LOGIN_SUCCESS.value]: action.payload,
+        [AUTH.LOGIN_SUCCESS.value]: action?.payload?.data,
         signinmessage: 'Login Successful',
       },
     });
     yield put({
       type: TOKEN.SET_TOKEN_SUCCESS.type,
-      data: { [TOKEN.SET_TOKEN_SUCCESS.value]: action.payload },
+      data: { [TOKEN.SET_TOKEN_SUCCESS.value]: action?.payload?.data?.idToken },
     });
 
     yield call(
       EncryptedStorage.setItem,
       constants.TOKEN,
-      JSON.stringify({ token: action.payload }),
+      JSON.stringify({ token: action?.payload?.data?.idToken }),
     );
   } catch (error) {
     yield put({

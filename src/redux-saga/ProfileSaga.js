@@ -1,7 +1,7 @@
-import {put, call, takeLatest, take} from 'redux-saga/effects';
+import { put, call, takeLatest, take } from 'redux-saga/effects';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import constants from '../Utils/constants';
-import {AUTH, TOKEN, PROFILE, POLICY} from '../redux/store/TypeConstants';
+import { AUTH, TOKEN, PROFILE, POLICY } from '../redux/store/TypeConstants';
 import {
   POST_SET,
   GET,
@@ -14,21 +14,22 @@ import {
   POST_FORM,
 } from './setup/method';
 
-function* getProfile() {
+function* getProfile(action) {
+  console.log(action.payload, 'Profile');
   try {
-    let response = yield call(GET, `client-profile`, yield getToken());
+    // let response = yield call(GET, `client-profile`, yield getToken());
 
     yield put({
       type: PROFILE.GET_PROFILE_SUCCESS.type,
       data: {
-        [PROFILE.GET_PROFILE_SUCCESS.value]: response,
+        [PROFILE.GET_PROFILE_SUCCESS.value]: action?.payload,
       },
     });
   } catch (error) {
     console.log(error);
     yield put({
       type: PROFILE.GET_PROFILE_FAILURE.type,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }
@@ -46,7 +47,7 @@ function* getHomeData() {
   } catch (error) {
     yield put({
       type: PROFILE.GET_HOME_FAILURE.type,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }
@@ -64,7 +65,7 @@ function* getChatList() {
   } catch (error) {
     yield put({
       type: PROFILE.GET_CHAT_LIST_FAILURE.type,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }
@@ -89,7 +90,7 @@ function* changePw(action) {
     console.log(error);
     yield put({
       type: PROFILE.CHANGE_PASSWORD_FAILURE.type,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }
@@ -106,7 +107,7 @@ function* getUpdateProfile(action) {
   } catch (error) {
     yield put({
       type: PROFILE.UPDATE_PROFILE_FAILURE.type,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }
@@ -123,7 +124,7 @@ function* getUpdatePayment(action) {
   } catch (error) {
     yield put({
       type: PROFILE.GET_PAYMENT_UPDATE_FAILURE.type,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }
@@ -139,7 +140,7 @@ function* getStateList(action) {
   } catch (error) {
     yield put({
       type: PROFILE.GET_STATE_LIST_REQUEST,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }
@@ -155,7 +156,7 @@ function* getProfileUpdateRequest() {
   } catch (error) {
     yield put({
       type: PROFILE.PROFILE_UPDATE_FAILURE,
-      data: {error: error},
+      data: { error: error },
     });
   }
 }

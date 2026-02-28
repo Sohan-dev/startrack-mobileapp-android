@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Image, useColorScheme, Text } from 'react-native';
 import { Images } from '../../Themes/Themes';
 import normalise from '../../Utils/Dimen';
@@ -9,91 +9,25 @@ import MyStatusBar from '../../Utils/StatusBar';
 
 import { getSignIn } from '../../redux/action/AuthAction';
 import { getProfile } from '../../redux/action/ProfileAction';
-// import showErrorAlert from '../../Utils/Toast';
-import { AUTH } from '../../redux/store/TypeConstants';
-import Status from '../../Utils/Status';
-import Loader from '../../Utils/Loader';
+import showErrorAlert from '../../Utils/Toast';
+import { getApp } from '@react-native-firebase/app';
 import {
-  DASHBOARD_NAVIGATION,
-  DEVICE_AUTH,
-} from '../../Navigation/route_names';
-// import EncryptedStorage from 'react-native-encrypted-storage';
-import constants from '../../Utils/constants';
-// import {generateDeviceToken} from '../../Utils/FirebaseToken';
-// import crashlytics from '@react-native-firebase/crashlytics';
+  getFirestore,
+  doc,
+  setDoc,
+  serverTimestamp,
+} from '@react-native-firebase/firestore';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import GoogleLoginButton from '../../Utils/GoogleLogin';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import constants from '../../Utils/constants';
 export default function Login(props) {
   const [token, setToken] = useState('');
+  const app = getApp(); // gets default Firebase app
+  const db = getFirestore(app); // Firestore instance
 
   const dispatch = useDispatch();
   const isDarkMode = useColorScheme() === 'dark';
-  // const AuthReducer = useSelector(state => state.AuthReducer);
-
-  // Status(
-  //   AuthReducer.status,
-  //   AUTH.LOGIN_REQUEST.type,
-  //   () => {
-  //     if (AuthReducer?.signinResponse?.data?.profile_update_allow === '1') {
-  //       props.navigation.navigate('EditProfile');
-  //     }
-  //   },
-  //   () => {
-  //     showErrorAlert(AuthReducer?.error?.message);
-  //   },
-  // );
-
-  // useEffect(() => {
-  //   const unsuscribe = props.navigation.addListener('focus', payload => {
-  //     generateDeviceToken().then(token => {
-  //       console.log('Token :', token);
-  //       setToken(token);
-  //     });
-  //   });
-  //   return () => {
-  //     unsuscribe();
-  //   };
-  // }, []);
-
-  // const isValid = () => {
-  //   // crashlytics().crash();
-  //   if (!email) {
-  //     showErrorAlert('Please enter Opportunity ID.');
-  //   } else if (!password) {
-  //     showErrorAlert('Please enter password.');
-  //   } else {
-  //     if (rememberMe) {
-  //       storeUserSession();
-  //     } else {
-  //       removeUserSession();
-  //     }
-
-  //     let loginObj = {};
-  //     loginObj.opportunity_id = email;
-  //     loginObj.password = password;
-  //     loginObj.firebase_token = token;
-
-  //     dispatch(getSignIn(loginObj));
-  //   }
-  // };
-
-  // async function storeUserSession() {
-  //   try {
-  //     await EncryptedStorage.setItem(
-  //       constants.USER_SESSION,
-  //       JSON.stringify({
-  //         email: email,
-  //         password: password,
-  //       }),
-  //     );
-  //     console.log('Congrats first value!');
-
-  //     // Congrats! You've just stored your first value!
-  //   } catch (error) {
-  //     console.log(error);
-  //     // There was an error on the native side
-  //   }
-  // }
 
   // async function retrieveUserSession() {
   //   try {
@@ -148,14 +82,57 @@ export default function Login(props) {
   //   }
   // };
 
-  const saveLoginResp = data => {
-    console.log(data);
-    if (data) {
-      dispatch(getSignIn(data));
-      dispatch(getProfile(data));
-      props.navigation.replace(DASHBOARD_NAVIGATION.app_grid_expense_screen);
+  const createUser = async user => {
+    try {
+      await setDoc(
+        doc(db, 'users', user?.id), // users/{uid}
+        {
+          name: user?.name,
+          id: user?.id,
+          email: user?.email,
+          phone: user?.phone || '',
+          photoURL: user?.photo || '',
+          isActive: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+      );
+
+      dispatch(getProfile(user));
+      showErrorAlert('User Loggedin successfully');
+
+      console.log('User created successfully');
+    } catch (error) {
+      console.error('Error creating user:', error);
     }
   };
+
+  const saveLoginResp = data => {
+    if (data) {
+      dispatch(getSignIn(data));
+      storeUserSession(data?.data?.user?.id);
+      createUser(data?.data?.user);
+    }
+  };
+
+  async function storeUserSession(userData) {
+    console.log(userData);
+    try {
+      await EncryptedStorage.setItem(
+        constants.USER_SESSION,
+        JSON.stringify({
+          id: userData,
+        }),
+      );
+      console.log('Congrats first value!');
+
+      // Congrats! You've just stored your first value!
+    } catch (error) {
+      console.log(error);
+      // There was an error on the native side
+    }
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <MyStatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />

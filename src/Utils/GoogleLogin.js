@@ -22,7 +22,6 @@ const GoogleLoginButton = props => {
   }
 
   useEffect(() => {
-    console.log('in google sign in');
     GoogleSignin.configure({
       webClientId:
         '472980189663-tqeg88dfb2qv0sm9n3b4ac0j55hrk8tv.apps.googleusercontent.com', // 🔥 required
@@ -41,6 +40,7 @@ const GoogleLoginButton = props => {
         // props.navigation.navigate(DASHBOARD_NAVIGATION.app_grid_expense_screen);
         onSuccess(response);
         console.log({ userInfo: response.data });
+        // await GoogleSignin.signOut();
       } else {
         // sign in was cancelled by user
       }

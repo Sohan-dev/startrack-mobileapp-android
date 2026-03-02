@@ -5,8 +5,9 @@ export const getProfile = payload => ({
   payload,
 });
 
-export const getHomeData = () => ({
+export const getHomeData = payload => ({
   type: PROFILE.GET_HOME_REQUEST.type,
+  payload,
 });
 
 export const getChatList = () => ({

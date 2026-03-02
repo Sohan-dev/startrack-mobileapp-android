@@ -34,14 +34,14 @@ function* getProfile(action) {
   }
 }
 
-function* getHomeData() {
+function* getHomeData(action) {
   try {
-    let response = yield call(GET, `home`, yield getToken());
+    // let response = yield call(GET, `home`, yield getToken());
 
     yield put({
       type: PROFILE.GET_HOME_SUCCESS.type,
       data: {
-        [PROFILE.GET_HOME_SUCCESS.value]: response,
+        [PROFILE.GET_HOME_SUCCESS.value]: action.payload,
       },
     });
   } catch (error) {

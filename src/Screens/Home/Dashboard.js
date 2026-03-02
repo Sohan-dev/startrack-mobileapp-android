@@ -1,12 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
@@ -16,7 +18,8 @@ import { Colors } from '../../Themes/Themes';
 import { DASHBOARD_NAVIGATION } from '../../Navigation/route_names';
 import { getLogout } from '../../redux/action/AuthAction';
 import { useDispatch } from 'react-redux';
-
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 const MENU = [
   {
     id: 1,
@@ -37,8 +40,50 @@ const MENU = [
 ];
 
 export default function Dashboard(props) {
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+  // useEffect(() => {
+  //   // Wait for auth state to be ready first
+  //   const unsubscribe = auth().onAuthStateChanged(user => {
+  //     if (user) {
+  //       fetchUserData(user.uid); // ✅ user is guaranteed here
+  //     } else {
+  //       console.log('No user logged in');
+  //       setLoading(false);
+  //     }
+  //   });
+
+  //   return () => unsubscribe(); // cleanup
+  // }, []);
+  const fetchUserData = async () => {
+    try {
+      const uid = auth().currentUser.uid; // get logged-in user's UID
+      console.log(uid, 'UIDDD');
+
+      const doc = await firestore()
+        .collection('users') // 🔁 change 'users' to your collection name
+        .doc(uid)
+        .get();
+
+      if (doc.exists) {
+        dispatch(getHomeData(doc.data()));
+        // console.log(doc.data());
+        setUserData(doc.data());
+      }
+    } catch (error) {
+      console.log('Error fetching user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isDarkMode = useColorScheme() === 'dark';
   const dispatch = useDispatch();
+  if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
   return (
     <SafeAreaView style={styles.container}>
       <MyStatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />

@@ -1,18 +1,12 @@
 import React, { useEffect } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  Alert,
-  Image,
-} from 'react-native';
+import { StyleSheet, Alert } from 'react-native';
 import {
   GoogleSignin,
   GoogleSigninButton,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import { DASHBOARD_NAVIGATION } from '../Navigation/route_names';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 const GoogleLoginButton = props => {
   function onSuccess(data) {
@@ -24,12 +18,36 @@ const GoogleLoginButton = props => {
   useEffect(() => {
     GoogleSignin.configure({
       webClientId:
-        '472980189663-tqeg88dfb2qv0sm9n3b4ac0j55hrk8tv.apps.googleusercontent.com', // 🔥 required
+        '713806015170-8v61kilunb46omim0rg9iosigi5l5rdn.apps.googleusercontent.com', // 🔥 required
       offlineAccess: true,
       forceCodeForRefreshToken: true,
       scopes: ['https://www.googleapis.com/auth/drive.readonly'],
     });
   }, []);
+
+  const saveUserToFirestore = async user => {
+    try {
+      await firestore()
+        .collection('users') // 🔁 change to your collection name if different
+        .doc(user.uid)
+        .set(
+          {
+            uid: user.uid,
+            displayName: user.displayName || '',
+            email: user.email || '',
+            photoURL: user.photoURL || '',
+            phoneNumber: user.phoneNumber || '',
+            lastLogin: user?.metadata?.lastSignInTime,
+            createdAt: user?.metadata?.creationTime,
+          },
+          { merge: true }, // won't overwrite existing fields
+        );
+      onSuccess(user);
+      console.log('User saved to Firestore ✅');
+    } catch (error) {
+      console.log('Firestore save error:', error);
+    }
+  };
 
   const signIn = async () => {
     try {
@@ -38,7 +56,24 @@ const GoogleLoginButton = props => {
       console.log('Google User:', response);
       if (response) {
         // props.navigation.navigate(DASHBOARD_NAVIGATION.app_grid_expense_screen);
-        onSuccess(response);
+        const idToken = response?.data?.idToken || response?.idToken;
+
+        if (!idToken) {
+          Alert.alert('Error', 'Failed to get Google token');
+          return;
+        }
+
+        // Step 2: Create Firebase credential from idToken
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+        // Step 3: Sign in to Firebase ← THIS was missing!
+        const firebaseUser = await auth().signInWithCredential(
+          googleCredential,
+        );
+
+        console.log('Firebase session created ✅', firebaseUser.user?._user);
+        await saveUserToFirestore(firebaseUser.user);
+
         console.log({ userInfo: response.data });
         // await GoogleSignin.signOut();
       } else {

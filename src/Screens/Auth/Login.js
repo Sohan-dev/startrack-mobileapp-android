@@ -82,56 +82,12 @@ export default function Login(props) {
   //   }
   // };
 
-  const createUser = async user => {
-    try {
-      await setDoc(
-        doc(db, 'users', user?.id), // users/{uid}
-        {
-          name: user?.name,
-          id: user?.id,
-          email: user?.email,
-          phone: user?.phone || '',
-          photoURL: user?.photo || '',
-          isActive: true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
-      );
-
-      dispatch(getProfile(user));
-      showErrorAlert('User Loggedin successfully');
-
-      console.log('User created successfully');
-    } catch (error) {
-      console.error('Error creating user:', error);
-    }
-  };
-
   const saveLoginResp = data => {
     if (data) {
-      dispatch(getSignIn(data));
-      storeUserSession(data?.data?.user?.id);
-      createUser(data?.data?.user);
+      console.log(data?._user);
+      dispatch(getSignIn(data?._user));
     }
   };
-
-  async function storeUserSession(userData) {
-    console.log(userData);
-    try {
-      await EncryptedStorage.setItem(
-        constants.USER_SESSION,
-        JSON.stringify({
-          id: userData,
-        }),
-      );
-      console.log('Congrats first value!');
-
-      // Congrats! You've just stored your first value!
-    } catch (error) {
-      console.log(error);
-      // There was an error on the native side
-    }
-  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -163,6 +119,7 @@ export default function Login(props) {
           }}
         >
           <GoogleLoginButton onSuccess={data => saveLoginResp(data)} />
+          <GoogleLoginButton />
 
           {/* <Button
             title={'Login'}

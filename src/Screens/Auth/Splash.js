@@ -56,11 +56,11 @@ export default function Splash(props) {
     //   ]),
     // ).start();
 
-    const timer = setTimeout(() => {
-      props.navigation.replace(DEVICE_AUTH.proceed_to_auth);
-    }, 2000);
+    // const timer = setTimeout(() => {
+    //   props.navigation.replace(DEVICE_AUTH.proceed_to_auth);
+    // }, 2000);
 
-    return () => clearTimeout(timer);
+    // return () => clearTimeout(timer);
   }, []);
 
   return (

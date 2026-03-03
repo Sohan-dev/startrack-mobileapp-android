@@ -1,11 +1,13 @@
-import {PROFILE} from '../store/TypeConstants';
+import { PROFILE } from '../store/TypeConstants';
 
-export const getProfile = () => ({
+export const getProfile = payload => ({
   type: PROFILE.GET_PROFILE_REQUEST.type,
+  payload,
 });
 
-export const getHomeData = () => ({
+export const getHomeData = payload => ({
   type: PROFILE.GET_HOME_REQUEST.type,
+  payload,
 });
 
 export const getChatList = () => ({

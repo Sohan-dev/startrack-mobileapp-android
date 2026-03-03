@@ -1,41 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
-// /* eslint-disable react-native/no-inline-styles */
-// import { StyleSheet, Text, View } from 'react-native';
-// import React from 'react';
-// import { SafeAreaView } from 'react-native-safe-area-context';
-// import normalise from '../../Utils/Dimen';
-// import MyStatusBar from '../../Utils/StatusBar';
 
-// export default function Dashboard() {
-//   return (
-//     <SafeAreaView style={{ flex: 1 }}>
-//       <MyStatusBar barStyle={'dark-content'} />
-//       <View
-//         style={{
-//           flex: 1,
-//           width: '100%',
-//           height: '100%',
-//           justifyContent: 'center',
-//           alignItems: 'center',
-//         }}
-//       >
-//         <Text>Dashboard</Text>
-//       </View>
-//     </SafeAreaView>
-//   );
-// }
-
-// const styles = StyleSheet.create({});
-
-//client id -
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
@@ -43,7 +16,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors } from '../../Themes/Themes';
 import { DASHBOARD_NAVIGATION } from '../../Navigation/route_names';
-
+import { getLogout } from '../../redux/action/AuthAction';
+import { useDispatch } from 'react-redux';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import { getHomeData } from '../../redux/action/ProfileAction';
 const MENU = [
   {
     id: 1,
@@ -51,7 +28,12 @@ const MENU = [
     icon: 'plus-circle-outline',
     path: DASHBOARD_NAVIGATION.app_grid_add_expense_screen,
   },
-  { id: 2, title: 'My Expenses', icon: 'file-document-outline', path: '' },
+  {
+    id: 2,
+    title: 'My Expenses',
+    icon: 'file-document-outline',
+    path: DASHBOARD_NAVIGATION.app_grid_my_expence,
+  },
   { id: 3, title: 'Employees', icon: 'clock-outline', path: '' },
   { id: 4, title: 'Approved', icon: 'check-circle-outline', path: '' },
   { id: 5, title: 'Rejected', icon: 'close-circle-outline', path: '' },
@@ -59,7 +41,50 @@ const MENU = [
 ];
 
 export default function Dashboard(props) {
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+  // useEffect(() => {
+  //   // Wait for auth state to be ready first
+  //   const unsubscribe = auth().onAuthStateChanged(user => {
+  //     if (user) {
+  //       fetchUserData(user.uid); // ✅ user is guaranteed here
+  //     } else {
+  //       console.log('No user logged in');
+  //       setLoading(false);
+  //     }
+  //   });
+
+  //   return () => unsubscribe(); // cleanup
+  // }, []);
+  const fetchUserData = async () => {
+    try {
+      const uid = auth().currentUser.uid; // get logged-in user's UID
+      console.log(uid, 'UIDDD');
+
+      const doc = await firestore()
+        .collection('users') // 🔁 change 'users' to your collection name
+        .doc(uid)
+        .get();
+
+      if (doc.exists) {
+        dispatch(getHomeData(doc.data()));
+        // console.log(doc.data());
+        setUserData(doc.data());
+      }
+    } catch (error) {
+      console.log('Error fetching user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isDarkMode = useColorScheme() === 'dark';
+  const dispatch = useDispatch();
+  if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
   return (
     <SafeAreaView style={styles.container}>
       <MyStatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
@@ -85,7 +110,7 @@ export default function Dashboard(props) {
         <View style={{ flexDirection: 'row' }}>
           <TouchableOpacity
             style={{ marginRight: normalise(20) }}
-            onPress={() => console.log('object')}
+            onPress={() => dispatch(getLogout())}
           >
             <Icon name={'account'} size={32} color={Colors.white} />
           </TouchableOpacity>

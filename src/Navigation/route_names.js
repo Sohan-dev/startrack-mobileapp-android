@@ -15,7 +15,7 @@ module.exports = {
     app_grid_expense_screen: 'DASHBOARD_NAVIGATION_app_grid_expense_screen',
     app_grid_add_expense_screen:
       'DASHBOARD_NAVIGATION_app_grid_add_expense_screen',
-    app_drawer_enquiry_screen: 'DASHBOARD_NAVIGATION_app_drawer_enquiry_screen',
+    app_grid_my_expence: 'DASHBOARD_NAVIGATION_app_grid_my_expence',
     app_drawer_manage_project_screen_screen:
       'DASHBOARD_NAVIGATION_app_chat_screen',
   },

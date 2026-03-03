@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "713806015170",
+    "project_id": "rn-startrack-app",
+    "storage_bucket": "rn-startrack-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713806015170:android:a1f8ba292a59b6bd28295b",
+        "android_client_info": {
+          "package_name": "com.startrackapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "713806015170-hs27a8hinvjs28csucf4vmuj3r19j0gv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.startrackapp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "713806015170-p946hegvrui4bmrsum816v06vlbj2nng.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.startrackapp",
+            "certificate_hash": "5c096af183217ea3756fd8a71e8f13be401a3bc8"
+          }
+        },
+        {
+          "client_id": "713806015170-8v61kilunb46omim0rg9iosigi5l5rdn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUYyFF5x43rwKyVz97q9i28difDcX3SxE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "713806015170-8v61kilunb46omim0rg9iosigi5l5rdn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

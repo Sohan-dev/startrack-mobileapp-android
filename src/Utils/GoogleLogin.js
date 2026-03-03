@@ -53,12 +53,14 @@ const GoogleLoginButton = props => {
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
-      console.log('Google User:', response);
+      console.log('Google User ✌✌:', response);
       if (response) {
+        console.log('inside response logic 👌', response?.data?.idToken);
         // props.navigation.navigate(DASHBOARD_NAVIGATION.app_grid_expense_screen);
-        const idToken = response?.data?.idToken || response?.idToken;
+        const idToken = response?.data?.idToken;
 
         if (!idToken) {
+          console.log('inside not idToken ❌');
           Alert.alert('Error', 'Failed to get Google token');
           return;
         }

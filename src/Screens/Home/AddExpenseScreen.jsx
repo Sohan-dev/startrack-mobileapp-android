@@ -12,6 +12,7 @@ import {
   Modal,
   FlatList,
   useColorScheme,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getApp } from '@react-native-firebase/app';
@@ -23,6 +24,11 @@ import {
 } from '@react-native-firebase/firestore';
 import { useDispatch, useSelector } from 'react-redux';
 import MyStatusBar from '../../Utils/StatusBar';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import showErrorAlert from '../../Utils/Toast';
+import LottieView from 'lottie-react-native';
 
 // ── Icons (text-based fallback if no icon lib) ─────────────────────────────
 const Icon = ({ name, size = 18, color = '#4a6278' }) => {
@@ -159,16 +165,23 @@ const EntryRow = ({ entry, onChange, onRemove, showRemove }) => {
   );
 };
 
+
+
  
 
 // ── Main Screen ─────────────────────────────────────────────────────────────
-export default function AddExpenseCopy({ navigation }) {
+export default function AddExpenseCopy(props) {
+  const [date, setDate] = useState(new Date());
+  const [showDate, setShowDate] = useState(false);
   const today = new Date().toDateString();
   const [entries, setEntries] = useState([{ id: 1, type: null, amount: '' }]);
   const [approver, setApprover] = useState('');
   const [description, setDescription] = useState('');
   const [showApproverModal, setShowApproverModal] = useState(false);
   const nextId = React.useRef(2);
+  const [loading, setLoading] = useState(false);
+  const [showAnim, setShowAnim] = useState(false);
+  
 
   const ProfileReducer = useSelector(state => state.ProfileReducer);
   console.log(ProfileReducer,'>>>');
@@ -178,31 +191,6 @@ export default function AddExpenseCopy({ navigation }) {
 
      const dispatch = useDispatch();
      const isDarkMode = useColorScheme() === 'dark';
-
-    const createUser = async user => {
-    try {
-      await setDoc(
-        doc(db, 'expense', user?.id), // users/{uid}
-        {
-          name: user?.name,
-          email: user?.email,
-          phone: user?.phone || '',
-          photoURL: user?.photo || '',
-          isActive: true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
-      );
-
-      // dispatch(getProfile(user));
-      // showErrorAlert('User Loggedin successfully');
-
-      console.log('User created successfully');
-    } catch (error) {
-      console.error('Error creating user:', error);
-    }
-  };
-
   const addEntry = () => {
 
     setEntries(prev => [...prev, { id: nextId.current++, type: null, amount: '' }]);
@@ -220,11 +208,54 @@ export default function AddExpenseCopy({ navigation }) {
   }, 0);
 
   const handleSubmit = () => {
-    const incomplete = entries.some(e => !e.type || !e.amount);
-    if (incomplete) return Alert.alert('Missing Info', 'Please fill type and amount for all entries.');
-    if (!approver) return Alert.alert('Missing Info', 'Please select an approver.');
-    Alert.alert('Success', `Expense of ₹${totalAmount.toFixed(2)} submitted!`);
+    submitExpense();
+    // const incomplete = entries.some(e => !e.type || !e.amount);
+    // if (incomplete) return Alert.alert('Missing Info', 'Please fill type and amount for all entries.');
+    // if (!approver) return Alert.alert('Missing Info', 'Please select an approver.');
+    // Alert.alert('Success', `Expense of ₹${totalAmount.toFixed(2)} submitted!`);
+
   };
+
+  //_____________________ Submit Expence ___________________________________//
+
+const submitExpense = async () => {
+  setLoading(true)
+  try {
+    const user = auth().currentUser;
+
+    if (!user) {
+      console.log("User not logged in");
+      setLoading(false)
+      return;
+    }
+
+    await firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('expenses')
+      .add({
+        expenseDate: date,
+        entries: entries,
+        approver: approver,
+        description: description,
+        totalAmount: totalAmount,
+        createdAt: Date.now(),
+      });
+      showErrorAlert("Expense saved successfully 🔥")
+      setLoading(false)
+      setShowAnim(!loading);
+
+      setTimeout(() => {
+        
+        props.navigation.goBack();
+      }, 3000);
+    console.log("Expense saved successfully 🔥");
+
+  } catch (error) {
+    console.log("Error saving expense:", error);
+  }
+};
+if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -238,11 +269,23 @@ export default function AddExpenseCopy({ navigation }) {
         {/* Expense Date */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Expense Date</Text>
-          <TouchableOpacity style={styles.dateRow}>
+          <TouchableOpacity style={styles.dateRow} onPress={() => setShowDate(true)}>
             <Icon name="calendar" size={20} color="#1e3a5f" />
-            <Text style={styles.dateText}>{today}</Text>
+            <Text style={styles.dateText}>{date.toDateString()}</Text>
           </TouchableOpacity>
         </View>
+
+         {showDate && (
+          <DateTimePicker
+            value={date}
+            maximumDate={Date.now()}
+            mode="date"
+            onChange={(e, selected) => {
+              setShowDate(false);
+              if (selected) setDate(selected);
+            }}
+          />
+        )}
 
         {/* Expense Entries */}
         <View style={styles.card}>
@@ -307,6 +350,16 @@ export default function AddExpenseCopy({ navigation }) {
         selected={approver}
         onSelect={setApprover}
       />
+      {showAnim && (
+  <View style={styles.successContainer}>
+    <LottieView
+      source={require('../../assets/success.json')}
+      autoPlay
+      loop={true}
+      style={{ width: 200, height: 200 }}
+    />
+  </View>
+)}
     </SafeAreaView>
   );
 }
@@ -446,4 +499,14 @@ const styles = StyleSheet.create({
   approverName: { flex: 1, fontSize: 15, color: '#2a3d50', fontWeight: '500' },
   approverNameActive: { color: BLUE, fontWeight: '700' },
   checkmark: { color: BLUE, fontSize: 18, fontWeight: '700' },
+   successContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });

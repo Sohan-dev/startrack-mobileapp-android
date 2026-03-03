@@ -84,7 +84,6 @@ export default function Login(props) {
 
   const saveLoginResp = data => {
     if (data) {
-      console.log(data?._user);
       dispatch(getSignIn(data?._user));
     }
   };
@@ -119,7 +118,6 @@ export default function Login(props) {
           }}
         >
           <GoogleLoginButton onSuccess={data => saveLoginResp(data)} />
-          <GoogleLoginButton />
 
           {/* <Button
             title={'Login'}

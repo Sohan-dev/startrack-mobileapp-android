@@ -20,6 +20,7 @@ import { getLogout } from '../../redux/action/AuthAction';
 import { useDispatch } from 'react-redux';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { getHomeData } from '../../redux/action/ProfileAction';
 const MENU = [
   {
     id: 1,

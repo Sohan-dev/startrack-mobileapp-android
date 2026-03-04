@@ -18,7 +18,8 @@ import {
   serverTimestamp,
 } from '@react-native-firebase/firestore';
 import EncryptedStorage from 'react-native-encrypted-storage';
-import GoogleLoginButton from '../../Utils/GoogleLogin';
+// import GoogleLoginButton from '../../Utils/GoogleLogin';
+import GoogleLoginButton from '../../Utils/GoogleLoginButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import constants from '../../Utils/constants';
 export default function Login(props) {
@@ -117,6 +118,7 @@ export default function Login(props) {
             alignItems: 'center',
           }}
         >
+          {/* <GoogleLoginButton onSuccess={data => saveLoginResp(data)} /> */}
           <GoogleLoginButton onSuccess={data => saveLoginResp(data)} />
 
           {/* <Button

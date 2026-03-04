@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "713806015170-hs27a8hinvjs28csucf4vmuj3r19j0gv.apps.googleusercontent.com",
+          "client_id": "713806015170-kqdo4rck9hnn3i5cbgelpm86v4hcepgk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.startrackapp",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+            "certificate_hash": "b0fad345113c507b3505157820093c1731a3a1b9"
           }
         },
         {

@@ -20,8 +20,8 @@ const GoogleLoginButton = props => {
       webClientId:
         '713806015170-8v61kilunb46omim0rg9iosigi5l5rdn.apps.googleusercontent.com', // 🔥 required
       offlineAccess: true,
-      forceCodeForRefreshToken: true,
-      scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+      // forceCodeForRefreshToken: true,
+      // scopes: ['https://www.googleapis.com/auth/drive.readonly'],
     });
   }, []);
 
@@ -54,32 +54,37 @@ const GoogleLoginButton = props => {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
       console.log('Google User ✌✌:', response);
-      if (response) {
-        console.log('inside response logic 👌', response?.data?.idToken);
-        // props.navigation.navigate(DASHBOARD_NAVIGATION.app_grid_expense_screen);
-        const idToken = response?.data?.idToken;
+      try {
+        if (response) {
+          console.log('inside response logic 👌', response?.data?.idToken);
+          // props.navigation.navigate(DASHBOARD_NAVIGATION.app_grid_expense_screen);
+          const idToken = response?.data?.idToken;
 
-        if (!idToken) {
-          console.log('inside not idToken ❌');
-          Alert.alert('Error', 'Failed to get Google token');
-          return;
+          if (!idToken) {
+            console.log('inside not idToken ❌');
+            Alert.alert('Error', 'Failed to get Google token');
+            return;
+          }
+
+          // Step 2: Create Firebase credential from idToken
+          const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+          // Step 3: Sign in to Firebase ← THIS was missing!
+          const firebaseUser = await auth().signInWithCredential(
+            googleCredential,
+          );
+
+          console.log('Firebase session created ✅', firebaseUser.user?._user);
+          await saveUserToFirestore(firebaseUser.user);
+
+          console.log({ userInfo: response.data });
+          // await GoogleSignin.signOut();
+        } else {
+          // sign in was cancelled by user
         }
-
-        // Step 2: Create Firebase credential from idToken
-        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-        // Step 3: Sign in to Firebase ← THIS was missing!
-        const firebaseUser = await auth().signInWithCredential(
-          googleCredential,
-        );
-
-        console.log('Firebase session created ✅', firebaseUser.user?._user);
-        await saveUserToFirestore(firebaseUser.user);
-
-        console.log({ userInfo: response.data });
-        // await GoogleSignin.signOut();
-      } else {
-        // sign in was cancelled by user
+      } catch (error) {
+        Alert.alert(error);
+        console.log(error);
       }
     } catch (error) {
       console.log(error);

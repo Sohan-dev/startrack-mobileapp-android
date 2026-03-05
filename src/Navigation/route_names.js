@@ -6,6 +6,10 @@ module.exports = {
   PROFILE_NAVIGATION: {
     app_profile_screen: 'PROFILE_NAVIGATION_app_profile_screen',
   },
+  EXPENSE_NAVIGATION: {
+    my_expense_edit_screen: 'EXPENSE_NAVIGATION_my_expense_edit_screen',
+  },
+
   DASHBOARD_NAVIGATION: {
     app_grid_expense_screen: 'DASHBOARD_NAVIGATION_app_grid_expense_screen',
     app_grid_add_expense_screen:

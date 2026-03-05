@@ -18,6 +18,8 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import normalise from '../../Utils/Dimen';
 import MyStatusBar from '../../Utils/StatusBar';
+import { EXPENSE_NAVIGATION } from '../../Navigation/route_names';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +39,8 @@ const STATUS_CONFIG = {
 function ExpenseCard({ item, index }) {
   const slideAnim = useRef(new Animated.Value(40)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  const navigation = useNavigation();
 
   useEffect(() => {
     Animated.parallel([
@@ -91,58 +95,82 @@ function ExpenseCard({ item, index }) {
         },
       ]}
     >
-      <View style={styles.card}>
-        {/* Left accent bar */}
-        <View style={[styles.accentBar, { backgroundColor: statusConfig.color }]} />
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate(EXPENSE_NAVIGATION.my_expense_edit_screen, {
+            expense: item,
+          })
+        }
+        activeOpacity={0.85}
+      >
+        <View style={styles.card}>
+          {/* Left accent bar */}
+          <View
+            style={[styles.accentBar, { backgroundColor: statusConfig.color }]}
+          />
 
-        <View style={styles.cardContent}>
-          {/* Top Row */}
-          <View style={styles.cardTopRow}>
-            {/* Amount */}
-            <View>
-              <Text style={styles.amountLabel}>Total Amount</Text>
-              <Text style={styles.amountText}>
-                ₹{formatAmount(item.totalAmount)}
-              </Text>
+          <View style={styles.cardContent}>
+            {/* Top Row */}
+            <View style={styles.cardTopRow}>
+              {/* Amount */}
+              <View>
+                <Text style={styles.amountLabel}>Total Amount</Text>
+                <Text style={styles.amountText}>
+                  ₹{formatAmount(item.totalAmount)}
+                </Text>
+              </View>
+
+              {/* Status Badge */}
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: statusConfig.bg },
+                ]}
+              >
+                <Icon
+                  name={statusConfig.icon}
+                  size={13}
+                  color={statusConfig.color}
+                />
+                <Text
+                  style={[styles.statusText, { color: statusConfig.color }]}
+                >
+                  {status}
+                </Text>
+              </View>
             </View>
 
-            {/* Status Badge */}
-            <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
-              <Icon name={statusConfig.icon} size={13} color={statusConfig.color} />
-              <Text style={[styles.statusText, { color: statusConfig.color }]}>
-                {status}
-              </Text>
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Bottom Row */}
+            <View style={styles.cardBottomRow}>
+              {/* Date */}
+              <View style={styles.infoItem}>
+                <Icon name="calendar-outline" size={13} color="#9CA3AF" />
+                <Text style={styles.infoText}>
+                  {formatDate(item.expenseDate)}
+                </Text>
+              </View>
+
+              {/* Approver */}
+              <View style={styles.infoItem}>
+                <Icon name="account-check-outline" size={13} color="#9CA3AF" />
+                <Text style={styles.infoText} numberOfLines={1}>
+                  {item.approver || 'Not assigned'}
+                </Text>
+              </View>
             </View>
+
+            {/* Description */}
+            {item.description ? (
+              <Text style={styles.description} numberOfLines={1}>
+                {item.description}
+              </Text>
+            ) : null}
           </View>
-
-          {/* Divider */}
-          <View style={styles.divider} />
-
-          {/* Bottom Row */}
-          <View style={styles.cardBottomRow}>
-            {/* Date */}
-            <View style={styles.infoItem}>
-              <Icon name="calendar-outline" size={13} color="#9CA3AF" />
-              <Text style={styles.infoText}>{formatDate(item.expenseDate)}</Text>
-            </View>
-
-            {/* Approver */}
-            <View style={styles.infoItem}>
-              <Icon name="account-check-outline" size={13} color="#9CA3AF" />
-              <Text style={styles.infoText} numberOfLines={1}>
-                {item.approver || 'Not assigned'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Description */}
-          {item.description ? (
-            <Text style={styles.description} numberOfLines={1}>
-              {item.description}
-            </Text>
-          ) : null}
         </View>
-      </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -239,7 +267,8 @@ export default function MyExpenses(props) {
             ₹{totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </Text>
           <Text style={styles.summaryCount}>
-            {filteredExpenses.length} expense{filteredExpenses.length !== 1 ? 's' : ''}
+            {filteredExpenses.length} expense
+            {filteredExpenses.length !== 1 ? 's' : ''}
           </Text>
         </View>
         <View style={styles.summaryIcon}>
@@ -264,13 +293,18 @@ export default function MyExpenses(props) {
             <Text
               style={[
                 styles.filterText,
-                activeFilter === filter.value && { color: filter.color, fontWeight: '700' },
+                activeFilter === filter.value && {
+                  color: filter.color,
+                  fontWeight: '700',
+                },
               ]}
             >
               {filter.label}
             </Text>
             {activeFilter === filter.value && (
-              <View style={[styles.filterDot, { backgroundColor: filter.color }]} />
+              <View
+                style={[styles.filterDot, { backgroundColor: filter.color }]}
+              />
             )}
           </TouchableOpacity>
         ))}

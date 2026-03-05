@@ -3,21 +3,14 @@ module.exports = {
   ENQUIRY: {
     add_enquiry: 'ENQUIRY_add_enquiry',
   },
-  TAB_NAVIGATION: {
-    app_tab_navigation: 'TAB_NAVIGATION_app_tab_navigation',
-    app_home_screen: 'TAB_NAVIGATION_app_home_screen',
-    app_invoice_screen: 'TAB_NAVIGATION_app_invoice_screen',
-    app_invoice_details_screen: 'TAB_NAVIGATION_app_invoice_details_screen',
-    app_chat_screen: 'TAB_NAVIGATION_app_chat_screen',
-    app_profile_screen: 'TAB_NAVIGATION_app_profile_screen',
+  PROFILE_NAVIGATION: {
+    app_profile_screen: 'PROFILE_NAVIGATION_app_profile_screen',
   },
   DASHBOARD_NAVIGATION: {
     app_grid_expense_screen: 'DASHBOARD_NAVIGATION_app_grid_expense_screen',
     app_grid_add_expense_screen:
       'DASHBOARD_NAVIGATION_app_grid_add_expense_screen',
     app_grid_my_expence: 'DASHBOARD_NAVIGATION_app_grid_my_expence',
-    app_drawer_manage_project_screen_screen:
-      'DASHBOARD_NAVIGATION_app_chat_screen',
   },
   DEVICE_AUTH: {
     proceed_to_auth: 'DEVICE_AUTH_proceed_to_login',

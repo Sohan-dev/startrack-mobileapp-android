@@ -4,11 +4,16 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import Login from '../Screens/Auth/Login';
 import { useSelector } from 'react-redux';
-import { DASHBOARD_NAVIGATION, DEVICE_AUTH } from './route_names';
+import {
+  DASHBOARD_NAVIGATION,
+  DEVICE_AUTH,
+  PROFILE_NAVIGATION,
+} from './route_names';
 import Splash from '../Screens/Auth/Splash';
 import Dashboard from '../Screens/Home/Dashboard';
-import AddExpence from '../Screens/Home/AddExpence';
 import AddExpenseCopy from '../Screens/Home/AddExpenseScreen';
+import ExpenseCard from '../Screens/Home/MyExpenses';
+import ProfileScreen from '../Screens/Home/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -38,11 +43,16 @@ export default function StackNavigator() {
           component={AddExpenseCopy}
           options={{ headerShown: false }}
         />
-        {/* <Stack.Screen
+        <Stack.Screen
           name={DASHBOARD_NAVIGATION.app_grid_my_expence}
-          component={AddExpenseCopy}
+          component={ExpenseCard}
           options={{ headerShown: false }}
-        /> */}
+        />
+        <Stack.Screen
+          name={PROFILE_NAVIGATION.app_profile_screen}
+          component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     );
   }

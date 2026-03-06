@@ -12,6 +12,8 @@ module.exports = {
 
   APPROVER_NAVIGATION: {
     approver_pending_expense: 'EXPENSE_NAVIGATION_approver_pending_expense',
+    approver_all_expense_history:
+      'EXPENSE_NAVIGATION_approver_all_expense_history',
   },
 
   DASHBOARD_NAVIGATION: {

@@ -161,19 +161,20 @@ export default function ProfileScreen(props) {
           style: 'destructive',
           onPress: async () => {
             try {
-              // ✅ Step 1 — Revoke Google access (forces account picker next time)
+              GoogleSignin.configure({
+                webClientId:
+                  '713806015170-8v61kilunb46omim0rg9iosigi5l5rdn.apps.googleusercontent.com',
+                offlineAccess: true,
+              });
+
               await GoogleSignin.revokeAccess();
-
-              // ✅ Step 2 — Sign out from Google
               await GoogleSignin.signOut();
-
-              // ✅ Step 3 — Sign out from Firebase
               await auth().signOut();
-
-              // ✅ Step 4 — Clear Redux state
               dispatch(getLogout());
             } catch (error) {
               console.log('Logout error:', error);
+              await auth().signOut();
+              dispatch(getLogout());
             }
           },
         },

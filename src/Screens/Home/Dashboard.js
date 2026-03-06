@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  useColorScheme,
   ActivityIndicator,
   Animated,
 } from 'react-native';
@@ -19,7 +18,6 @@ import {
   DASHBOARD_NAVIGATION,
   PROFILE_NAVIGATION,
 } from '../../Navigation/route_names';
-import { getLogout } from '../../redux/action/AuthAction';
 import { useDispatch } from 'react-redux';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -51,22 +49,22 @@ const EMPLOYEE_MENU = [
     color: '#A78BFA',
     bg: '#F5F0FF',
   },
-  {
-    id: 4,
-    title: 'Approved',
-    icon: 'check-decagram-outline',
-    path: '',
-    color: '#34D399',
-    bg: '#F0FFF8',
-  },
-  {
-    id: 5,
-    title: 'Rejected',
-    icon: 'close-octagon-outline',
-    path: '',
-    color: '#FB923C',
-    bg: '#FFF5F0',
-  },
+  // {
+  //   id: 4,
+  //   title: 'Approved',
+  //   icon: 'check-decagram-outline',
+  //   path: '',
+  //   color: '#34D399',
+  //   bg: '#F0FFF8',
+  // },
+  // {
+  //   id: 5,
+  //   title: 'Rejected',
+  //   icon: 'close-octagon-outline',
+  //   path: '',
+  //   color: '#FB923C',
+  //   bg: '#FFF5F0',
+  // },
   {
     id: 6,
     title: 'Reports',
@@ -90,26 +88,26 @@ const APPROVER_MENU = [
     id: 2,
     title: 'All Expenses',
     icon: 'format-list-bulleted',
-    path: '',
+    path: APPROVER_NAVIGATION.approver_all_expense_history,
     color: '#4ECDC4',
     bg: '#F0FFFE',
   },
-  {
-    id: 3,
-    title: 'Approved',
-    icon: 'check-decagram-outline',
-    path: '',
-    color: '#34D399',
-    bg: '#F0FFF8',
-  },
-  {
-    id: 4,
-    title: 'Rejected',
-    icon: 'close-octagon-outline',
-    path: '',
-    color: '#FB923C',
-    bg: '#FFF5F0',
-  },
+  // {
+  //   id: 3,
+  //   title: 'Approved',
+  //   icon: 'check-decagram-outline',
+  //   path: '',
+  //   color: '#34D399',
+  //   bg: '#F0FFF8',
+  // },
+  // {
+  //   id: 4,
+  //   title: 'Rejected',
+  //   icon: 'close-octagon-outline',
+  //   path: '',
+  //   color: '#FB923C',
+  //   bg: '#FFF5F0',
+  // },
   {
     id: 5,
     title: 'Employees',
@@ -239,41 +237,90 @@ export default function Dashboard(props) {
     }
   };
 
+  // const fetchExpenseCounts = async (uid, role) => {
+  //   try {
+  //     if (role === 'approver') {
+  //       // Approver sees ALL expenses across all users
+  //       const [p, a, r] = await Promise.all([
+  //         firestore()
+  //           .collectionGroup('expenses')
+  //           .where('status', '==', 'Pending')
+  //           .get(),
+  //         firestore()
+  //           .collectionGroup('expenses')
+  //           .where('status', '==', 'Approved')
+  //           .get(),
+  //         firestore()
+  //           .collectionGroup('expenses')
+  //           .where('status', '==', 'Rejected')
+  //           .get(),
+  //       ]);
+  //       setPendingCount(p.size);
+  //       setApprovedCount(a.size);
+  //       setRejectedCount(r.size);
+  //     } else {
+  //       // Employee sees only their own expenses
+  //       const base = firestore()
+  //         .collection('users')
+  //         .doc(uid)
+  //         .collection('expenses');
+  //       const [p, a, r] = await Promise.all([
+  //         base.where('status', '==', 'Pending').get(),
+  //         base.where('status', '==', 'Approved').get(),
+  //         base.where('status', '==', 'Rejected').get(),
+  //       ]);
+  //       setPendingCount(p.size);
+  //       setApprovedCount(a.size);
+  //       setRejectedCount(r.size);
+  //     }
+  //   } catch (error) {
+  //     console.log('Error fetching counts:', error);
+  //   }
+  // };
+
   const fetchExpenseCounts = async (uid, role) => {
     try {
       if (role === 'approver') {
-        // Approver sees ALL expenses across all users
-        const [p, a, r] = await Promise.all([
-          firestore()
-            .collectionGroup('expenses')
-            .where('status', '==', 'Pending')
-            .get(),
-          firestore()
-            .collectionGroup('expenses')
-            .where('status', '==', 'Approved')
-            .get(),
-          firestore()
-            .collectionGroup('expenses')
-            .where('status', '==', 'Rejected')
-            .get(),
-        ]);
-        setPendingCount(p.size);
-        setApprovedCount(a.size);
-        setRejectedCount(r.size);
+        const currentUserEmail = auth().currentUser?.email;
+        // ✅ Fetch all without orderBy — no index needed
+        const snap = await firestore().collectionGroup('expenses').get();
+
+        const all = snap.docs.map(d => d.data());
+        console.log(all, 'ALL DOCS');
+        console.log(
+          all.filter(e => e.status === 'Pending'),
+          'Pending DOCS',
+        );
+        setPendingCount(
+          all.filter(
+            e => e.status === 'Pending' && e.approverEmail === currentUserEmail,
+          ).length,
+        );
+        setApprovedCount(
+          all.filter(
+            e =>
+              e.status === 'Approved' && e.approverEmail === currentUserEmail,
+          ).length,
+        );
+        setRejectedCount(
+          all.filter(
+            e =>
+              e.status === 'Rejected' && e.approverEmail === currentUserEmail,
+          ).length,
+        );
       } else {
-        // Employee sees only their own expenses
+        // Employee — own expenses only
         const base = firestore()
           .collection('users')
           .doc(uid)
           .collection('expenses');
-        const [p, a, r] = await Promise.all([
-          base.where('status', '==', 'Pending').get(),
-          base.where('status', '==', 'Approved').get(),
-          base.where('status', '==', 'Rejected').get(),
-        ]);
-        setPendingCount(p.size);
-        setApprovedCount(a.size);
-        setRejectedCount(r.size);
+
+        const snap = await base.get();
+        const all = snap.docs.map(d => d.data());
+
+        setPendingCount(all.filter(e => e.status === 'Pending').length);
+        setApprovedCount(all.filter(e => e.status === 'Approved').length);
+        setRejectedCount(all.filter(e => e.status === 'Rejected').length);
       }
     } catch (error) {
       console.log('Error fetching counts:', error);

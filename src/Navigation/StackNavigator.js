@@ -17,6 +17,7 @@ import ProfileScreen from '../Screens/Home/ProfileScreen';
 import EditExpenseScreen from '../Screens/Home/EditExpenseScreen';
 import PendingApprovalsScreen from '../Screens/Approver/PendingApprovalsScreen';
 import AllExpensesScreen from '../Screens/Approver/AllExpensesScreen';
+import ReportScreen from '../Screens/Approver/ReportScreen';
 
 const Stack = createStackNavigator();
 
@@ -69,6 +70,11 @@ export default function StackNavigator() {
         <Stack.Screen
           name={APPROVER_NAVIGATION.approver_all_expense_history}
           component={AllExpensesScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={APPROVER_NAVIGATION.approver_all_expense_report}
+          component={ReportScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

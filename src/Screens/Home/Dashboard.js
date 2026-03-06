@@ -123,7 +123,7 @@ const APPROVER_MENU = [
     id: 6,
     title: 'Reports',
     icon: 'chart-areaspline',
-    path: '',
+    path: APPROVER_NAVIGATION.approver_all_expense_report,
     color: '#38BDF8',
     bg: '#F0F9FF',
   },

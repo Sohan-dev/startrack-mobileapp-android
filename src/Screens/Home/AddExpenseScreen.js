@@ -21,6 +21,10 @@ import LottieView from 'lottie-react-native';
 import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  sendNotificationToApprover,
+  sendNotificationToSelf,
+} from '../../Utils/sendNotification';
 
 // ── Expense Types ─────────────────────────────────────────────────────────
 const EXPENSE_TYPES = [
@@ -33,10 +37,22 @@ const EXPENSE_TYPES = [
 ];
 
 const APPROVERS = [
-  'Amit Das',
-  'Aparesh Mondal',
-  'Rishav Dasgupta',
-  'Shubhankar(Developer)',
+  {
+    name: 'Amit Das',
+    email: 'amit@startrackautomation.in',
+  },
+  {
+    name: 'Aparesh Mondal',
+    email: 'aparesh@startrackautomation.in',
+  },
+  {
+    name: 'Rishav Dasgupta',
+    email: 'manoj@startrackautomation.in',
+  },
+  {
+    name: 'Shubhankar(Developer)',
+    email: 'shubhankarkoner.sta@gmail.com',
+  },
 ];
 
 // ── Type Selector Modal ───────────────────────────────────────────────────
@@ -103,37 +119,27 @@ const ApproverModal = ({ visible, onSelect, onClose, selected }) => (
     <View style={styles.sheet}>
       <View style={styles.sheetHandle} />
       <Text style={styles.sheetTitle}>Select Approver</Text>
-      {APPROVERS.map(name => {
-        const isActive = selected === name;
-        return (
-          <TouchableOpacity
-            key={name}
-            style={[styles.approverRow, isActive && styles.approverRowActive]}
-            onPress={() => {
-              onSelect(name);
-              onClose();
-            }}
-          >
-            <View
-              style={[
-                styles.approverAvatar,
-                isActive && { backgroundColor: '#E8453C' },
-              ]}
-            >
-              <Text style={styles.approverInitial}>{name[0]}</Text>
-            </View>
-            <Text
-              style={[
-                styles.approverName,
-                isActive && { color: '#E8453C', fontWeight: '700' },
-              ]}
-            >
-              {name}
-            </Text>
-            {isActive && <Icon name="check-circle" size={20} color="#E8453C" />}
-          </TouchableOpacity>
-        );
-      })}
+      {APPROVERS.map(approver => (
+        <TouchableOpacity
+          key={approver.email}
+          style={[
+            styles.approverRow,
+            selected?.email === approver.email && styles.approverRowActive,
+          ]}
+          onPress={() => {
+            onSelect(approver);
+            onClose();
+          }}
+        >
+          <View style={styles.approverAvatar}>
+            <Text style={styles.approverInitial}>{approver.name[0]}</Text>
+          </View>
+          <Text style={styles.approverName}>{approver.name}</Text>
+          {selected?.email === approver.email && (
+            <Icon name="check-circle" size={20} color="#E8453C" />
+          )}
+        </TouchableOpacity>
+      ))}
     </View>
   </Modal>
 );
@@ -208,7 +214,7 @@ export default function AddExpenseScreen(props) {
   const [date, setDate] = useState(new Date());
   const [showDate, setShowDate] = useState(false);
   const [entries, setEntries] = useState([{ id: 1, type: null, amount: '' }]);
-  const [approver, setApprover] = useState('');
+  const [approver, setApprover] = useState(null);
   const [description, setDescription] = useState('');
   const [showApproverModal, setShowApproverModal] = useState(false);
   const nextId = React.useRef(2);
@@ -264,13 +270,31 @@ export default function AddExpenseScreen(props) {
         .add({
           expenseDate: date,
           entries: entries,
-          approver: approver,
+          approver: approver?.name || '',
+          approverEmail: approver?.email || '',
           description: description,
           totalAmount: totalAmount,
           createdAt: Date.now(),
           status: 'Pending',
           userId: user.uid,
         });
+
+      await sendNotificationToApprover(
+        approver?.email,
+        '📋 New Expense Request',
+        `${user.displayName} submitted ₹${totalAmount.toFixed(
+          2,
+        )} for your approval.`,
+        { screen: 'PendingApprovals' },
+      );
+
+      // await sendNotificationToSelf(
+      //   '🧾 Expense Submitted!',
+      //   `Your expense of ₹${totalAmount.toFixed(
+      //     2,
+      //   )} has been sent to ${approver}.`,
+      //   { screen: 'MyExpenses' },
+      // );
 
       showErrorAlert('Expense saved successfully 🔥');
       setLoading(false);
@@ -393,7 +417,7 @@ export default function AddExpenseScreen(props) {
                 !approver && { color: '#C4C4C4', fontWeight: '500' },
               ]}
             >
-              {approver || 'Tap to select'}
+              {approver?.name || 'Tap to select'}
             </Text>
           </View>
           <Icon name="chevron-right" size={20} color="#D1D5DB" />

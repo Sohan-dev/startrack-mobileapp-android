@@ -21,25 +21,41 @@ import normalise from '../../Utils/Dimen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const EXPENSE_TYPES = [
-  { id: 'fuel',    label: 'Fuel',    icon: 'gas-station',     color: '#F59E0B' },
-  { id: 'hotel',   label: 'Hotel',   icon: 'bed',             color: '#8B5CF6' },
-  { id: 'food',    label: 'Food',    icon: 'food',            color: '#EF4444' },
-  { id: 'travel',  label: 'Travel',  icon: 'airplane',        color: '#3B82F6' },
-  { id: 'medical', label: 'Medical', icon: 'pill',            color: '#10B981' },
-  { id: 'other',   label: 'Other',   icon: 'dots-horizontal', color: '#6B7280' },
+  { id: 'fuel', label: 'Fuel', icon: 'gas-station', color: '#F59E0B' },
+  { id: 'hotel', label: 'Hotel', icon: 'bed', color: '#8B5CF6' },
+  { id: 'food', label: 'Food', icon: 'food', color: '#EF4444' },
+  { id: 'travel', label: 'Travel', icon: 'airplane', color: '#3B82F6' },
+  { id: 'medical', label: 'Medical', icon: 'pill', color: '#10B981' },
+  { id: 'other', label: 'Other', icon: 'dots-horizontal', color: '#6B7280' },
 ];
 
 const APPROVERS = [
-  'Amit Das',
-  'Aparesh Mondal',
-  'Rishav Dasgupta',
-  'Shubhankar(Developer)',
+  {
+    name: 'Amit Das',
+    email: 'amit@startrackautomation.in',
+  },
+  {
+    name: 'Aparesh Mondal',
+    email: 'aparesh@startrackautomation.in',
+  },
+  {
+    name: 'Rishav Dasgupta',
+    email: 'manoj@startrackautomation.in',
+  },
+  {
+    name: 'Shubhankar(Developer)',
+    email: 'shubhankarkoner.sta@gmail.com',
+  },
 ];
 
 // ── Type Modal ────────────────────────────────────────────────────────────
 const TypeModal = ({ visible, onSelect, onClose, selected }) => (
   <Modal visible={visible} transparent animationType="slide">
-    <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} />
+    <TouchableOpacity
+      style={styles.overlay}
+      activeOpacity={1}
+      onPress={onClose}
+    />
     <View style={styles.sheet}>
       <View style={styles.sheetHandle} />
       <Text style={styles.sheetTitle}>Select Expense Type</Text>
@@ -49,13 +65,32 @@ const TypeModal = ({ visible, onSelect, onClose, selected }) => (
           return (
             <TouchableOpacity
               key={type.id}
-              style={[styles.typeChip, isActive && { backgroundColor: type.color + '18', borderColor: type.color }]}
-              onPress={() => { onSelect(type); onClose(); }}
+              style={[
+                styles.typeChip,
+                isActive && {
+                  backgroundColor: type.color + '18',
+                  borderColor: type.color,
+                },
+              ]}
+              onPress={() => {
+                onSelect(type);
+                onClose();
+              }}
             >
-              <View style={[styles.typeIconWrap, { backgroundColor: type.color + '20' }]}>
+              <View
+                style={[
+                  styles.typeIconWrap,
+                  { backgroundColor: type.color + '20' },
+                ]}
+              >
                 <Icon name={type.icon} size={20} color={type.color} />
               </View>
-              <Text style={[styles.typeChipLabel, isActive && { color: type.color, fontWeight: '700' }]}>
+              <Text
+                style={[
+                  styles.typeChipLabel,
+                  isActive && { color: type.color, fontWeight: '700' },
+                ]}
+              >
                 {type.label}
               </Text>
             </TouchableOpacity>
@@ -69,28 +104,35 @@ const TypeModal = ({ visible, onSelect, onClose, selected }) => (
 // ── Approver Modal ────────────────────────────────────────────────────────
 const ApproverModal = ({ visible, onSelect, onClose, selected }) => (
   <Modal visible={visible} transparent animationType="slide">
-    <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} />
+    <TouchableOpacity
+      style={styles.overlay}
+      activeOpacity={1}
+      onPress={onClose}
+    />
     <View style={styles.sheet}>
       <View style={styles.sheetHandle} />
       <Text style={styles.sheetTitle}>Select Approver</Text>
-      {APPROVERS.map(name => {
-        const isActive = selected === name;
-        return (
-          <TouchableOpacity
-            key={name}
-            style={[styles.approverRow, isActive && styles.approverRowActive]}
-            onPress={() => { onSelect(name); onClose(); }}
-          >
-            <View style={[styles.approverAvatar, isActive && { backgroundColor: '#E8453C' }]}>
-              <Text style={styles.approverInitial}>{name[0]}</Text>
-            </View>
-            <Text style={[styles.approverName, isActive && { color: '#E8453C', fontWeight: '700' }]}>
-              {name}
-            </Text>
-            {isActive && <Icon name="check-circle" size={20} color="#E8453C" />}
-          </TouchableOpacity>
-        );
-      })}
+      {APPROVERS.map(approver => (
+        <TouchableOpacity
+          key={approver.email}
+          style={[
+            styles.approverRow,
+            selected?.email === approver.email && styles.approverRowActive,
+          ]}
+          onPress={() => {
+            onSelect(approver);
+            onClose();
+          }}
+        >
+          <View style={styles.approverAvatar}>
+            <Text style={styles.approverInitial}>{approver.name[0]}</Text>
+          </View>
+          <Text style={styles.approverName}>{approver.name}</Text>
+          {selected?.email === approver.email && (
+            <Icon name="check-circle" size={20} color="#E8453C" />
+          )}
+        </TouchableOpacity>
+      ))}
     </View>
   </Modal>
 );
@@ -107,13 +149,21 @@ const EntryRow = ({ entry, onChange, onRemove, showRemove, index }) => {
       </View>
 
       <TouchableOpacity
-        style={[styles.entryTypeBtn, entry.type && { borderColor: typeColor, backgroundColor: typeColor + '10' }]}
+        style={[
+          styles.entryTypeBtn,
+          entry.type && {
+            borderColor: typeColor,
+            backgroundColor: typeColor + '10',
+          },
+        ]}
         onPress={() => setShowTypeModal(true)}
       >
         {entry.type ? (
           <>
             <Icon name={entry.type.icon} size={15} color={typeColor} />
-            <Text style={[styles.entryTypeText, { color: typeColor }]}>{entry.type.label}</Text>
+            <Text style={[styles.entryTypeText, { color: typeColor }]}>
+              {entry.type.label}
+            </Text>
           </>
         ) : (
           <Text style={styles.entryTypePlaceholder}>Type ▾</Text>
@@ -168,6 +218,10 @@ export default function EditExpenseScreen(props) {
       : [{ id: 1, type: null, amount: '' }],
   );
   const [approver, setApprover] = useState(expense?.approver || '');
+  const [approverEmail, setApproverEmail] = useState(
+    expense?.approverEmail || '',
+  );
+  const [updateApprover, setUpdateApproverEmail] = useState(null);
   const [description, setDescription] = useState(expense?.description || '');
   const [showApproverModal, setShowApproverModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -175,25 +229,48 @@ export default function EditExpenseScreen(props) {
 
   const isReadOnly = expense?.status !== 'Pending';
 
+  console.log(expense?.approver, '..../....');
+
   const addEntry = () => {
-    setEntries(prev => [...prev, { id: nextId.current++, type: null, amount: '' }]);
+    setEntries(prev => [
+      ...prev,
+      { id: nextId.current++, type: null, amount: '' },
+    ]);
   };
 
   const removeEntry = id => setEntries(prev => prev.filter(e => e.id !== id));
 
   const updateEntry = (id, field, value) => {
-    setEntries(prev => prev.map(e => (e.id === id ? { ...e, [field]: value } : e)));
+    setEntries(prev =>
+      prev.map(e => (e.id === id ? { ...e, [field]: value } : e)),
+    );
   };
 
-  const totalAmount = entries.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  const totalAmount = entries.reduce(
+    (sum, e) => sum + (parseFloat(e.amount) || 0),
+    0,
+  );
 
   const formatDate = d =>
-    d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    d.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
 
   const handleUpdate = async () => {
-    if (!date) { showErrorAlert('Please select date'); return; }
-    if (entries.length === 0) { showErrorAlert('Please enter at least one entry'); return; }
-    if (!approver) { showErrorAlert('Please select approver'); return; }
+    if (!date) {
+      showErrorAlert('Please select date');
+      return;
+    }
+    if (entries.length === 0) {
+      showErrorAlert('Please enter at least one entry');
+      return;
+    }
+    if (!approver) {
+      showErrorAlert('Please select approver');
+      return;
+    }
 
     Alert.alert(
       'Update Expense',
@@ -218,14 +295,17 @@ export default function EditExpenseScreen(props) {
         .update({
           expenseDate: date,
           entries: entries,
-          approver: approver,
+          approver: updateApprover?.name || expense?.approver,
+          approverEmail: updateApprover?.email || expense?.approverEmail,
           description: description,
           totalAmount: totalAmount,
           updatedAt: Date.now(),
         });
 
       showErrorAlert('Expense updated successfully ✅');
-      setTimeout(() => { props.navigation.goBack(); }, 1500);
+      setTimeout(() => {
+        props.navigation.goBack();
+      }, 1500);
     } catch (error) {
       console.log('Update error:', error);
       Alert.alert('Error', 'Failed to update expense');
@@ -240,7 +320,10 @@ export default function EditExpenseScreen(props) {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => props.navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => props.navigation.goBack()}
+        >
           <Icon name="arrow-left" size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
@@ -251,20 +334,29 @@ export default function EditExpenseScreen(props) {
 
       {/* Read-only Banner */}
       {isReadOnly && (
-        <View style={[
-          styles.statusBanner,
-          expense?.status === 'Approved' ? { backgroundColor: '#F0FFF8', borderColor: '#34D399' }
-            : { backgroundColor: '#FFF5F5', borderColor: '#F87171' },
-        ]}>
+        <View
+          style={[
+            styles.statusBanner,
+            expense?.status === 'Approved'
+              ? { backgroundColor: '#F0FFF8', borderColor: '#34D399' }
+              : { backgroundColor: '#FFF5F5', borderColor: '#F87171' },
+          ]}
+        >
           <Icon
-            name={expense?.status === 'Approved' ? 'check-circle-outline' : 'close-circle-outline'}
+            name={
+              expense?.status === 'Approved'
+                ? 'check-circle-outline'
+                : 'close-circle-outline'
+            }
             size={18}
             color={expense?.status === 'Approved' ? '#34D399' : '#F87171'}
           />
-          <Text style={[
-            styles.statusBannerText,
-            { color: expense?.status === 'Approved' ? '#34D399' : '#F87171' },
-          ]}>
+          <Text
+            style={[
+              styles.statusBannerText,
+              { color: expense?.status === 'Approved' ? '#34D399' : '#F87171' },
+            ]}
+          >
             This expense is {expense?.status} and cannot be edited
           </Text>
         </View>
@@ -290,7 +382,9 @@ export default function EditExpenseScreen(props) {
             <Text style={styles.dateLabelSmall}>Selected Date</Text>
             <Text style={styles.dateValue}>{formatDate(date)}</Text>
           </View>
-          {!isReadOnly && <Icon name="chevron-right" size={20} color="#D1D5DB" />}
+          {!isReadOnly && (
+            <Icon name="chevron-right" size={20} color="#D1D5DB" />
+          )}
           {isReadOnly && <Icon name="lock-outline" size={18} color="#D1D5DB" />}
         </TouchableOpacity>
 
@@ -311,7 +405,11 @@ export default function EditExpenseScreen(props) {
           <Text style={styles.sectionLabel}>Expense Entries</Text>
           {!isReadOnly && (
             <TouchableOpacity
-              style={[styles.addEntryBtn, entries[entries.length - 1]?.amount === '' && styles.addEntryBtnDisabled]}
+              style={[
+                styles.addEntryBtn,
+                entries[entries.length - 1]?.amount === '' &&
+                  styles.addEntryBtnDisabled,
+              ]}
               onPress={addEntry}
               disabled={entries[entries.length - 1]?.amount === ''}
             >
@@ -327,20 +425,38 @@ export default function EditExpenseScreen(props) {
             <Text style={[styles.entryHeaderText, { flex: 1.2 }]}>Type</Text>
             <Text style={[styles.entryHeaderText, { flex: 1.5 }]}>Amount</Text>
           </View>
-          {entries.map((entry, idx) => (
+          {entries.map((entry, idx) =>
             isReadOnly ? (
               // Read-only entry view
               <View key={entry.id || idx} style={styles.readOnlyEntry}>
                 <View style={styles.entryIndex}>
                   <Text style={styles.entryIndexText}>{idx + 1}</Text>
                 </View>
-                <View style={[styles.readOnlyType, { backgroundColor: (entry.type?.color || '#6B7280') + '15' }]}>
-                  <Icon name={entry.type?.icon || 'dots-horizontal'} size={14} color={entry.type?.color || '#6B7280'} />
-                  <Text style={[styles.readOnlyTypeText, { color: entry.type?.color || '#6B7280' }]}>
+                <View
+                  style={[
+                    styles.readOnlyType,
+                    {
+                      backgroundColor: (entry.type?.color || '#6B7280') + '15',
+                    },
+                  ]}
+                >
+                  <Icon
+                    name={entry.type?.icon || 'dots-horizontal'}
+                    size={14}
+                    color={entry.type?.color || '#6B7280'}
+                  />
+                  <Text
+                    style={[
+                      styles.readOnlyTypeText,
+                      { color: entry.type?.color || '#6B7280' },
+                    ]}
+                  >
                     {entry.type?.label || 'N/A'}
                   </Text>
                 </View>
-                <Text style={styles.readOnlyAmount}>₹ {parseFloat(entry.amount || 0).toFixed(2)}</Text>
+                <Text style={styles.readOnlyAmount}>
+                  ₹ {parseFloat(entry.amount || 0).toFixed(2)}
+                </Text>
               </View>
             ) : (
               <EntryRow
@@ -351,8 +467,8 @@ export default function EditExpenseScreen(props) {
                 onRemove={() => removeEntry(entry.id)}
                 showRemove={entries.length > 1}
               />
-            )
-          ))}
+            ),
+          )}
         </View>
 
         {/* Approver */}
@@ -365,20 +481,39 @@ export default function EditExpenseScreen(props) {
           <View style={[styles.dateIconWrap, { backgroundColor: '#F0F9FF' }]}>
             <Icon name="account-check-outline" size={22} color="#38BDF8" />
           </View>
+
           <View style={styles.dateTextWrap}>
             <Text style={styles.dateLabelSmall}>Selected Approver</Text>
-            <Text style={[styles.dateValue, !approver && { color: '#C4C4C4', fontWeight: '500' }]}>
-              {approver || 'Not selected'}
+            <Text
+              style={[
+                styles.dateValue,
+                !approver && { color: '#C4C4C4', fontWeight: '500' },
+              ]}
+            >
+              {updateApprover?.name || expense.approver}
             </Text>
           </View>
-          {!isReadOnly && <Icon name="chevron-right" size={20} color="#D1D5DB" />}
+
+          {!isReadOnly && (
+            <Icon name="chevron-right" size={20} color="#D1D5DB" />
+          )}
           {isReadOnly && <Icon name="lock-outline" size={18} color="#D1D5DB" />}
         </TouchableOpacity>
 
         {/* Description */}
         <Text style={styles.sectionLabel}>Description</Text>
-        <View style={[styles.card, { alignItems: 'flex-start', paddingVertical: normalise(14) }]}>
-          <View style={[styles.dateIconWrap, { backgroundColor: '#F5F0FF', marginTop: 2 }]}>
+        <View
+          style={[
+            styles.card,
+            { alignItems: 'flex-start', paddingVertical: normalise(14) },
+          ]}
+        >
+          <View
+            style={[
+              styles.dateIconWrap,
+              { backgroundColor: '#F5F0FF', marginTop: 2 },
+            ]}
+          >
             <Icon name="text" size={20} color="#A78BFA" />
           </View>
           <TextInput
@@ -396,7 +531,9 @@ export default function EditExpenseScreen(props) {
         <View style={styles.totalBanner}>
           <View>
             <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalSub}>{entries.length} item{entries.length !== 1 ? 's' : ''}</Text>
+            <Text style={styles.totalSub}>
+              {entries.length} item{entries.length !== 1 ? 's' : ''}
+            </Text>
           </View>
           <Text style={styles.totalValue}>₹ {totalAmount.toFixed(2)}</Text>
         </View>
@@ -427,7 +564,7 @@ export default function EditExpenseScreen(props) {
         visible={showApproverModal}
         onClose={() => setShowApproverModal(false)}
         selected={approver}
-        onSelect={setApprover}
+        onSelect={setUpdateApproverEmail}
       />
     </SafeAreaView>
   );
@@ -598,7 +735,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  entryIndexText: { fontSize: normalise(11), fontWeight: '700', color: '#6B7280' },
+  entryIndexText: {
+    fontSize: normalise(11),
+    fontWeight: '700',
+    color: '#6B7280',
+  },
   entryTypeBtn: {
     flex: 1.2,
     flexDirection: 'row',
@@ -623,7 +764,12 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     paddingHorizontal: normalise(8),
   },
-  rupeeSign: { fontSize: normalise(14), color: '#6B7280', fontWeight: '700', marginRight: 4 },
+  rupeeSign: {
+    fontSize: normalise(14),
+    color: '#6B7280',
+    fontWeight: '700',
+    marginRight: 4,
+  },
   entryAmountInput: {
     flex: 1,
     fontSize: normalise(14),
@@ -682,7 +828,12 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: normalise(14), fontWeight: '700', color: '#fff' },
   totalSub: { fontSize: normalise(11), color: '#9CA3AF', marginTop: 2 },
-  totalValue: { fontSize: normalise(22), fontWeight: '800', color: '#34D399', letterSpacing: -0.5 },
+  totalValue: {
+    fontSize: normalise(22),
+    fontWeight: '800',
+    color: '#34D399',
+    letterSpacing: -0.5,
+  },
 
   // Submit
   submitBtn: {
@@ -699,7 +850,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
-  submitText: { color: '#fff', fontSize: normalise(16), fontWeight: '700', letterSpacing: 0.3 },
+  submitText: {
+    color: '#fff',
+    fontSize: normalise(16),
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
 
   // Modal
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
@@ -711,35 +867,80 @@ const styles = StyleSheet.create({
     paddingBottom: normalise(36),
   },
   sheetHandle: {
-    width: 40, height: 4, backgroundColor: '#E5E7EB',
-    borderRadius: 2, alignSelf: 'center', marginBottom: normalise(16),
+    width: 40,
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: normalise(16),
   },
-  sheetTitle: { fontSize: normalise(17), fontWeight: '700', color: '#1F2937', marginBottom: normalise(18) },
+  sheetTitle: {
+    fontSize: normalise(17),
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: normalise(18),
+  },
 
   // Type Grid
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   typeChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#F9FAFB', borderRadius: 12,
-    paddingHorizontal: normalise(12), paddingVertical: normalise(10),
-    borderWidth: 1.5, borderColor: '#E5E7EB', minWidth: '44%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: normalise(12),
+    paddingVertical: normalise(10),
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    minWidth: '44%',
   },
-  typeIconWrap: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  typeChipLabel: { fontSize: normalise(13), fontWeight: '600', color: '#4B5563' },
+  typeIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  typeChipLabel: {
+    fontSize: normalise(13),
+    fontWeight: '600',
+    color: '#4B5563',
+  },
 
   // Approver
   approverRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: normalise(12), borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: normalise(12),
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   approverRowActive: {
-    backgroundColor: '#FFF5F5', borderRadius: 12,
-    paddingHorizontal: normalise(8), borderBottomWidth: 0, marginBottom: 4,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 12,
+    paddingHorizontal: normalise(8),
+    borderBottomWidth: 0,
+    marginBottom: 4,
   },
   approverAvatar: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  approverInitial: { color: '#fff', fontWeight: '800', fontSize: normalise(16) },
-  approverName: { flex: 1, fontSize: normalise(15), color: '#374151', fontWeight: '500' },
+  approverInitial: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: normalise(16),
+  },
+  approverName: {
+    flex: 1,
+    fontSize: normalise(15),
+    color: '#374151',
+    fontWeight: '500',
+  },
 });

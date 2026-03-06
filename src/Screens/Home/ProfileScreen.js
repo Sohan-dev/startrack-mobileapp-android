@@ -23,6 +23,7 @@ import normalise from '../../Utils/Dimen';
 import MyStatusBar from '../../Utils/StatusBar';
 import { useDispatch } from 'react-redux';
 import { getLogout } from '../../redux/action/AuthAction';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const FIELDS = [
   {
@@ -149,7 +150,7 @@ export default function ProfileScreen(props) {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -158,12 +159,44 @@ export default function ProfileScreen(props) {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => dispatch(getLogout()),
+          onPress: async () => {
+            try {
+              // ✅ Step 1 — Revoke Google access (forces account picker next time)
+              await GoogleSignin.revokeAccess();
+
+              // ✅ Step 2 — Sign out from Google
+              await GoogleSignin.signOut();
+
+              // ✅ Step 3 — Sign out from Firebase
+              await auth().signOut();
+
+              // ✅ Step 4 — Clear Redux state
+              dispatch(getLogout());
+            } catch (error) {
+              console.log('Logout error:', error);
+            }
+          },
         },
       ],
       { cancelable: false },
     );
   };
+
+  // const handleLogout = () => {
+  //   Alert.alert(
+  //     'Logout',
+  //     'Are you sure you want to logout?',
+  //     [
+  //       { text: 'Cancel', style: 'cancel' },
+  //       {
+  //         text: 'Logout',
+  //         style: 'destructive',
+  //         onPress: () => dispatch(getLogout()),
+  //       },
+  //     ],
+  //     { cancelable: false },
+  //   );
+  // };
 
   const formatDate = dateStr => {
     if (!dateStr) return 'N/A';
@@ -189,7 +222,7 @@ export default function ProfileScreen(props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <MyStatusBar barStyle="light-content" />
+      <MyStatusBar barStyle="light-content" backgroundColor={'#E8453C'} />
 
       {/* Header */}
       <Animated.View

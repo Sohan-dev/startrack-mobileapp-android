@@ -7,12 +7,20 @@ import {
 } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import showErrorAlert from './Toast';
+
+// ── Approver emails ───────────────────────────────────────────────────────
+// Users with these emails will automatically get 'approver' role
+const APPROVER_EMAILS = [
+  'aparesh@startrackautomation.in',
+  'manoj@startrackautomation.in',
+  'amit@startrackautomation.in',
+  'shubhankarkoner.sta@gmail.com',
+];
 
 const GoogleLoginButton = props => {
   function onSuccess(data) {
-    if (props.onSuccess) {
-      props.onSuccess(data);
-    }
+    if (props.onSuccess) props.onSuccess(data);
   }
 
   useEffect(() => {
@@ -25,6 +33,10 @@ const GoogleLoginButton = props => {
 
   const saveUserToFirestore = async user => {
     try {
+      const role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
+        ? 'approver'
+        : 'employee';
+
       await firestore()
         .collection('users')
         .doc(user.uid)
@@ -35,85 +47,112 @@ const GoogleLoginButton = props => {
             email: user.email || '',
             photoURL: user.photoURL || '',
             phoneNumber: user.phoneNumber || '',
-            // ✅ FIX: user.metadata exists directly on the Firebase user object
-            lastLogin: user.metadata?.lastSignInTime || null,
-            createdAt: user.metadata?.creationTime || null,
+            lastLogin: user?.metadata?.lastSignInTime,
+            createdAt: user?.metadata?.creationTime,
+            role: role,
           },
           { merge: true },
         );
+      // showErrorAlert("Fi")
+      console.log('User saved ✅ Role:', role);
       onSuccess(user);
-      console.log('User saved to Firestore ✅');
     } catch (error) {
       console.log('Firestore save error:', error);
-      // ✅ FIX: Show a readable error message instead of crashing
-      Alert.alert(
-        'Firestore Error',
-        error?.message || 'Failed to save user data',
-      );
     }
   };
+
+  // const saveUserToFirestore = async user => {
+  //   try {
+  //     const existingUser = await firestore()
+  //       .collection('users')
+  //       .doc(user.uid)
+  //       .get();
+
+  //     console.log('User email from Google:', JSON.stringify(user.email));
+  //     console.log('APPROVER_EMAILS list:', JSON.stringify(APPROVER_EMAILS));
+  //     console.log(
+  //       'Email match:',
+  //       APPROVER_EMAILS.includes(user.email?.toLowerCase()),
+  //     );
+
+  //     let role = 'employee';
+  //     if (existingUser.exists) {
+  //       // Keep existing role — never overwrite
+  //       role = existingUser.data()?.role || 'employee';
+  //     } else {
+  //       // New user — assign role by email
+  //       role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
+  //         ? 'approver'
+  //         : 'employee';
+  //     }
+
+  //     await firestore()
+  //       .collection('users')
+  //       .doc(user.uid)
+  //       .set(
+  //         {
+  //           uid: user.uid,
+  //           displayName: user.displayName || '',
+  //           email: user.email || '',
+  //           photoURL: user.photoURL || '',
+  //           phoneNumber: user.phoneNumber || '',
+  //           lastLogin: user?.metadata?.lastSignInTime,
+  //           createdAt: user?.metadata?.creationTime,
+  //           role: role, // ✅ role saved here
+  //         },
+  //         { merge: true },
+  //       );
+
+  //     console.log(`User saved ✅ Role: ${role}`);
+  //     onSuccess(user);
+  //   } catch (error) {
+  //     console.log('Firestore save error:', error);
+  //   }
+  // };
 
   const signIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
-      console.log('Google Sign-In response ✌✌:', response);
 
-      // ✅ FIX: Guard against null/undefined response
       if (!response?.data) {
-        Alert.alert('Error', 'Google Sign-In returned no data');
+        Alert.alert('Error', 'No data from Google');
         return;
       }
 
-      const idToken = response?.data?.idToken;
-
-      console.log(idToken, '🤦‍♀️🙌🙌🤦‍♀️');
-
+      const idToken = response.data.idToken;
       if (!idToken) {
-        console.log('No idToken received ❌');
         Alert.alert('Error', 'Failed to get Google token');
         return;
       }
 
-      // Create Firebase credential from idToken
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-      // Sign in to Firebase with the Google credential
       const userCredential = await auth().signInWithCredential(
         googleCredential,
       );
-      const firebaseUser = userCredential.user; // ✅ FIX: Correctly extract user
 
-      console.log('Firebase session created ✅', firebaseUser.uid);
+      showErrorAlert('Login Successful');
 
-      await saveUserToFirestore(firebaseUser);
+      console.log('Firebase session created ✅');
+      await saveUserToFirestore(userCredential.user);
     } catch (error) {
       console.log('Sign-in error:', error);
-
       if (error?.code) {
         switch (error.code) {
           case statusCodes.SIGN_IN_CANCELLED:
-            // User cancelled — no need to show alert
-            console.log('Sign-in cancelled by user');
+            console.log('Cancelled by user');
             break;
           case statusCodes.IN_PROGRESS:
             Alert.alert('Please wait', 'Sign-in already in progress');
             break;
           case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-            Alert.alert(
-              'Error',
-              'Google Play Services not available or outdated',
-            );
+            Alert.alert('Error', 'Google Play Services not available');
             break;
           default:
-            // ✅ FIX: Alert.alert requires strings, not error objects
-            Alert.alert(
-              'Sign-In Error',
-              error?.message || 'An unexpected error occurred',
-            );
+            Alert.alert('Sign-In Error', error?.message || 'Unexpected error');
         }
       } else {
-        Alert.alert('Error', error?.message || 'An unexpected error occurred');
+        Alert.alert('Error', error?.message || 'Unexpected error');
       }
     }
   };
@@ -122,27 +161,9 @@ const GoogleLoginButton = props => {
     <GoogleSigninButton
       size={GoogleSigninButton.Size.Wide}
       color={GoogleSigninButton.Color.Dark}
-      onPress={signIn} // ✅ FIX: Pass function reference directly (cleaner)
+      onPress={signIn}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 14,
-    borderRadius: 6,
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-    padding: 5,
-  },
-  text: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default GoogleLoginButton;

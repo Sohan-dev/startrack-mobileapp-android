@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
+  BackHandler,
 } from 'react-native';
 import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
@@ -23,6 +24,8 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { getHomeData } from '../../redux/action/ProfileAction';
 import usePushNotification from '../../Utils/usePushNotification';
+import { useFocusEffect } from '@react-navigation/native';
+import showErrorAlert from '../../Utils/Toast';
 
 const EMPLOYEE_MENU = [
   {
@@ -199,12 +202,43 @@ export default function Dashboard(props) {
   const [rejectedCount, setRejectedCount] = useState(0);
   const headerAnim = useRef(new Animated.Value(-60)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
+  const backPressedOnce = useRef(false);
   const dispatch = useDispatch();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (backPressedOnce.current) {
+          // Second press — exit app
+          BackHandler.exitApp();
+          return true;
+        }
+
+        // First press — show toast
+        backPressedOnce.current = true;
+        showErrorAlert('Press back again to exit');
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+          backPressedOnce.current = false;
+        }, 2000);
+
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+      return () => subscription.remove();
+    }, []),
+  );
 
   usePushNotification(props.navigation);
 
   useEffect(() => {
     fetchUserData();
+    fetchExpenseCounts();
     Animated.parallel([
       Animated.spring(headerAnim, {
         toValue: 0,
@@ -226,9 +260,9 @@ export default function Dashboard(props) {
       const doc = await firestore().collection('users').doc(uid).get();
       if (doc.exists) {
         const data = doc.data();
-        dispatch(getHomeData(data));
+        // dispatch(getHomeData(data));
         setUserData(data);
-        fetchExpenseCounts(uid, data.role);
+        // fetchExpenseCounts(uid, data.role);
       }
     } catch (error) {
       console.log('Error fetching user:', error);
@@ -237,60 +271,20 @@ export default function Dashboard(props) {
     }
   };
 
-  // const fetchExpenseCounts = async (uid, role) => {
-  //   try {
-  //     if (role === 'approver') {
-  //       // Approver sees ALL expenses across all users
-  //       const [p, a, r] = await Promise.all([
-  //         firestore()
-  //           .collectionGroup('expenses')
-  //           .where('status', '==', 'Pending')
-  //           .get(),
-  //         firestore()
-  //           .collectionGroup('expenses')
-  //           .where('status', '==', 'Approved')
-  //           .get(),
-  //         firestore()
-  //           .collectionGroup('expenses')
-  //           .where('status', '==', 'Rejected')
-  //           .get(),
-  //       ]);
-  //       setPendingCount(p.size);
-  //       setApprovedCount(a.size);
-  //       setRejectedCount(r.size);
-  //     } else {
-  //       // Employee sees only their own expenses
-  //       const base = firestore()
-  //         .collection('users')
-  //         .doc(uid)
-  //         .collection('expenses');
-  //       const [p, a, r] = await Promise.all([
-  //         base.where('status', '==', 'Pending').get(),
-  //         base.where('status', '==', 'Approved').get(),
-  //         base.where('status', '==', 'Rejected').get(),
-  //       ]);
-  //       setPendingCount(p.size);
-  //       setApprovedCount(a.size);
-  //       setRejectedCount(r.size);
-  //     }
-  //   } catch (error) {
-  //     console.log('Error fetching counts:', error);
-  //   }
-  // };
-
-  const fetchExpenseCounts = async (uid, role) => {
+  const fetchExpenseCounts = async () => {
     try {
+      var role = '';
+      const uid = auth().currentUser?.uid;
+      const doc = await firestore().collection('users').doc(uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        role = data?.role;
+      }
       if (role === 'approver') {
         const currentUserEmail = auth().currentUser?.email;
-        // ✅ Fetch all without orderBy — no index needed
         const snap = await firestore().collectionGroup('expenses').get();
-
         const all = snap.docs.map(d => d.data());
-        console.log(all, 'ALL DOCS');
-        console.log(
-          all.filter(e => e.status === 'Pending'),
-          'Pending DOCS',
-        );
+
         setPendingCount(
           all.filter(
             e => e.status === 'Pending' && e.approverEmail === currentUserEmail,
@@ -308,6 +302,7 @@ export default function Dashboard(props) {
               e.status === 'Rejected' && e.approverEmail === currentUserEmail,
           ).length,
         );
+        setLoading(false);
       } else {
         // Employee — own expenses only
         const base = firestore()
@@ -321,8 +316,10 @@ export default function Dashboard(props) {
         setPendingCount(all.filter(e => e.status === 'Pending').length);
         setApprovedCount(all.filter(e => e.status === 'Approved').length);
         setRejectedCount(all.filter(e => e.status === 'Rejected').length);
+        setLoading(false);
       }
     } catch (error) {
+      setLoading(false);
       console.log('Error fetching counts:', error);
     }
   };

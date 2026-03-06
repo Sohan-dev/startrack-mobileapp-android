@@ -10,6 +10,10 @@ module.exports = {
     my_expense_edit_screen: 'EXPENSE_NAVIGATION_my_expense_edit_screen',
   },
 
+  APPROVER_NAVIGATION: {
+    approver_pending_expense: 'EXPENSE_NAVIGATION_approver_pending_expense',
+  },
+
   DASHBOARD_NAVIGATION: {
     app_grid_expense_screen: 'DASHBOARD_NAVIGATION_app_grid_expense_screen',
     app_grid_add_expense_screen:

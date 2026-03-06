@@ -118,28 +118,7 @@ export default function Login(props) {
             alignItems: 'center',
           }}
         >
-          {/* <GoogleLoginButton onSuccess={data => saveLoginResp(data)} /> */}
           <GoogleLoginButton onSuccess={data => saveLoginResp(data)} />
-
-          {/* <Button
-            title={'Login'}
-            img={null}
-            height={normalise(40)}
-            width={normalise(150)}
-            marginTop={normalise(40)}
-            borderRadius={normalise(5)}
-            backgroundColor={'#d0d2d6'}
-            onPress={() =>
-              props.navigation.navigate(
-                DASHBOARD_NAVIGATION.app_grid_expense_screen,
-              )
-            }
-          /> */}
-          {/* <View style={{ position: 'absolute', marginBottom: 0 }}>
-            <Text style={{ fontSize: 12, color: 'red' }}>
-              🔥 NEW BUILD 1.0.0
-            </Text>
-          </View> */}
         </View>
       </View>
     </SafeAreaView>

@@ -1,10 +1,9 @@
 import React from 'react';
-
 import { createStackNavigator } from '@react-navigation/stack';
-
-import Login from '../Screens/Auth/Login';
+import Login from '../Screens/Auth/LoginScreen';
 import { useSelector } from 'react-redux';
 import {
+  APPROVER_NAVIGATION,
   DASHBOARD_NAVIGATION,
   DEVICE_AUTH,
   EXPENSE_NAVIGATION,
@@ -16,6 +15,7 @@ import AddExpenseScreen from '../Screens/Home/AddExpenseScreen';
 import ExpenseCard from '../Screens/Home/MyExpenses';
 import ProfileScreen from '../Screens/Home/ProfileScreen';
 import EditExpenseScreen from '../Screens/Home/EditExpenseScreen';
+import PendingApprovalsScreen from '../Screens/Approver/PendingApprovalsScreen';
 
 const Stack = createStackNavigator();
 
@@ -60,6 +60,12 @@ export default function StackNavigator() {
           component={EditExpenseScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name={APPROVER_NAVIGATION.approver_pending_expense}
+          component={PendingApprovalsScreen}
+          options={{ headerShown: false }}
+        />
+        {/* <Stack.Screen name="AllExpenses" component={AllExpensesScreen} /> */}
       </Stack.Navigator>
     );
   }

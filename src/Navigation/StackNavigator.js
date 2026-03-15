@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Login from '../Screens/Auth/LoginScreen';
 import { useSelector } from 'react-redux';
 import {
+  ADVANCE_PAY_NAVIGATION,
   APPROVER_NAVIGATION,
   DASHBOARD_NAVIGATION,
   DEVICE_AUTH,
@@ -17,6 +18,8 @@ import ProfileScreen from '../Screens/Home/ProfileScreen';
 import EditExpenseScreen from '../Screens/Home/EditExpenseScreen';
 import PendingApprovalsScreen from '../Screens/Approver/PendingApprovalsScreen';
 import AllExpensesScreen from '../Screens/Approver/AllExpensesScreen';
+import RequestAdvanceScreen from '../Screens/AdvancePay/RequestAdvanceScreen';
+import MyAdvancesScreen from '../Screens/AdvancePay/MyAdvancesScreen';
 
 const Stack = createStackNavigator();
 
@@ -69,6 +72,16 @@ export default function StackNavigator() {
         <Stack.Screen
           name={APPROVER_NAVIGATION.approver_all_expense_history}
           component={AllExpensesScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={ADVANCE_PAY_NAVIGATION.proceed_to_req_advance_pay}
+          component={RequestAdvanceScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={ADVANCE_PAY_NAVIGATION.my_advance_pay_list}
+          component={MyAdvancesScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

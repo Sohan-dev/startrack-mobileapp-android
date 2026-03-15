@@ -15,6 +15,7 @@ import normalise from '../../Utils/Dimen';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
+  ADVANCE_PAY_NAVIGATION,
   APPROVER_NAVIGATION,
   DASHBOARD_NAVIGATION,
   PROFILE_NAVIGATION,
@@ -52,6 +53,22 @@ const EMPLOYEE_MENU = [
     color: '#A78BFA',
     bg: '#F5F0FF',
   },
+  {
+    id: 4,
+    title: 'Request Advances',
+    icon: 'cash-fast',
+    path: ADVANCE_PAY_NAVIGATION.proceed_to_req_advance_pay,
+    color: '#36b781',
+    bg: '#EEF2FF',
+  },
+  {
+    id: 4,
+    title: 'My Advances',
+    icon: 'cash-fast',
+    path: ADVANCE_PAY_NAVIGATION.my_advance_pay_list,
+    color: '#8fcc49',
+    bg: '#EEF2FF',
+  },
   // {
   //   id: 4,
   //   title: 'Approved',
@@ -68,14 +85,14 @@ const EMPLOYEE_MENU = [
   //   color: '#FB923C',
   //   bg: '#FFF5F0',
   // },
-  {
-    id: 6,
-    title: 'Reports',
-    icon: 'chart-areaspline',
-    path: '',
-    color: '#38BDF8',
-    bg: '#F0F9FF',
-  },
+  // {
+  //   id: 6,
+  //   title: 'Reports',
+  //   icon: 'chart-areaspline',
+  //   path: '',
+  //   color: '#38BDF8',
+  //   bg: '#F0F9FF',
+  // },
 ];
 
 const APPROVER_MENU = [
@@ -95,14 +112,14 @@ const APPROVER_MENU = [
     color: '#4ECDC4',
     bg: '#F0FFFE',
   },
-  // {
-  //   id: 3,
-  //   title: 'Approved',
-  //   icon: 'check-decagram-outline',
-  //   path: '',
-  //   color: '#34D399',
-  //   bg: '#F0FFF8',
-  // },
+  {
+    id: 3,
+    title: 'Advances Pay',
+    icon: 'cash-fast',
+    path: 'MyAdvances',
+    color: '#6366F1',
+    bg: '#EEF2FF',
+  },
   // {
   //   id: 4,
   //   title: 'Rejected',
@@ -111,22 +128,22 @@ const APPROVER_MENU = [
   //   color: '#FB923C',
   //   bg: '#FFF5F0',
   // },
-  {
-    id: 5,
-    title: 'Employees',
-    icon: 'account-group-outline',
-    path: '',
-    color: '#A78BFA',
-    bg: '#F5F0FF',
-  },
-  {
-    id: 6,
-    title: 'Reports',
-    icon: 'chart-areaspline',
-    path: '',
-    color: '#38BDF8',
-    bg: '#F0F9FF',
-  },
+  // {
+  //   id: 5,
+  //   title: 'Employees',
+  //   icon: 'account-group-outline',
+  //   path: '',
+  //   color: '#A78BFA',
+  //   bg: '#F5F0FF',
+  // },
+  // {
+  //   id: 6,
+  //   title: 'Reports',
+  //   icon: 'chart-areaspline',
+  //   path: '',
+  //   color: '#38BDF8',
+  //   bg: '#F0F9FF',
+  // },
 ];
 
 function AnimatedCard({ item, index, onPress }) {

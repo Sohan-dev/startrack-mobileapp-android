@@ -39,7 +39,7 @@ const APPROVERS = [
     email: 'aparesh@startrackautomation.in',
   },
   {
-    name: 'Rishav Dasgupta',
+    name: 'Manoj Dasgupta',
     email: 'manoj@startrackautomation.in',
   },
   {

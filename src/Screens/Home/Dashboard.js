@@ -23,7 +23,6 @@ import {
 import { useDispatch } from 'react-redux';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { getHomeData } from '../../redux/action/ProfileAction';
 import usePushNotification from '../../Utils/usePushNotification';
 import { useFocusEffect } from '@react-navigation/native';
 import showErrorAlert from '../../Utils/Toast';
@@ -98,7 +97,7 @@ const EMPLOYEE_MENU = [
 const APPROVER_MENU = [
   {
     id: 1,
-    title: 'Pending',
+    title: 'Review Expenses',
     icon: 'clock-alert-outline',
     path: APPROVER_NAVIGATION.approver_pending_expense,
     color: '#F59E0B',
@@ -106,18 +105,26 @@ const APPROVER_MENU = [
   },
   {
     id: 2,
-    title: 'All Expenses',
+    title: 'Expense History',
     icon: 'format-list-bulleted',
     path: APPROVER_NAVIGATION.approver_all_expense_history,
     color: '#4ECDC4',
     bg: '#F0FFFE',
   },
+  // {
+  //   id: 3,
+  //   title: 'Pay Advances',
+  //   icon: 'cash-fast',
+  //   path: ADVANCE_PAY_NAVIGATION.proceed_to_pay_advance,
+  //   color: '#6366F1',
+  //   bg: '#EEF2FF',
+  // },
   {
     id: 3,
-    title: 'Advances Pay',
+    title: 'Advance Requests',
     icon: 'cash-fast',
-    path: 'MyAdvances',
-    color: '#6366F1',
+    path: ADVANCE_PAY_NAVIGATION.proceed_to_check_pending_advance,
+    color: '#cc9a2d',
     bg: '#EEF2FF',
   },
   // {
@@ -128,14 +135,14 @@ const APPROVER_MENU = [
   //   color: '#FB923C',
   //   bg: '#FFF5F0',
   // },
-  // {
-  //   id: 5,
-  //   title: 'Employees',
-  //   icon: 'account-group-outline',
-  //   path: '',
-  //   color: '#A78BFA',
-  //   bg: '#F5F0FF',
-  // },
+  {
+    id: 5,
+    title: 'Employees',
+    icon: 'account-group-outline',
+    path: '',
+    color: '#A78BFA',
+    bg: '#F5F0FF',
+  },
   // {
   //   id: 6,
   //   title: 'Reports',
@@ -226,16 +233,11 @@ export default function Dashboard(props) {
     React.useCallback(() => {
       const onBackPress = () => {
         if (backPressedOnce.current) {
-          // Second press — exit app
           BackHandler.exitApp();
           return true;
         }
-
-        // First press — show toast
         backPressedOnce.current = true;
         showErrorAlert('Press back again to exit');
-
-        // Reset after 2 seconds
         setTimeout(() => {
           backPressedOnce.current = false;
         }, 2000);
@@ -383,28 +385,6 @@ export default function Dashboard(props) {
             <Text style={styles.nameText}>
               {userData?.displayName?.split(' ')[0] || 'User'} 👋
             </Text>
-            {/* <View
-              style={[
-                styles.roleBadge,
-                isApprover
-                  ? { backgroundColor: '#FFD700' }
-                  : { backgroundColor: 'rgba(255,255,255,0.25)' },
-              ]}
-            >
-              <Icon
-                name={isApprover ? 'shield-check' : 'account'}
-                size={11}
-                color={isApprover ? '#1F2937' : '#fff'}
-              />
-              <Text
-                style={[
-                  styles.roleBadgeText,
-                  { color: isApprover ? '#1F2937' : '#fff' },
-                ]}
-              >
-                {isApprover ? 'Approver' : 'Employee'}
-              </Text>
-            </View> */}
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -412,12 +392,6 @@ export default function Dashboard(props) {
             <Icon name="bell-outline" size={22} color="#fff" />
             <View style={styles.notifDot} />
           </TouchableOpacity>
-          {/* <TouchableOpacity
-            style={[styles.headerBtn, styles.avatarBtn]}
-            onPress={() => dispatch(getLogout())}
-          >
-            <Icon name="account-outline" size={22} color="#fff" />
-          </TouchableOpacity> */}
           <TouchableOpacity
             style={[styles.headerBtn, styles.avatarBtn]}
             onPress={() =>

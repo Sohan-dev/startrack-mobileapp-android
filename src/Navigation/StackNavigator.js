@@ -20,6 +20,8 @@ import PendingApprovalsScreen from '../Screens/Approver/PendingApprovalsScreen';
 import AllExpensesScreen from '../Screens/Approver/AllExpensesScreen';
 import RequestAdvanceScreen from '../Screens/AdvancePay/RequestAdvanceScreen';
 import MyAdvancesScreen from '../Screens/AdvancePay/MyAdvancesScreen';
+import PendingAdvancesScreen from '../Screens/AdvancePay/PendingAdvancesScreen';
+// import AdvancePaymentScreen from '../Screens/AdvancePay/AdvancePaymentScreen';
 
 const Stack = createStackNavigator();
 
@@ -84,6 +86,16 @@ export default function StackNavigator() {
           component={MyAdvancesScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name={ADVANCE_PAY_NAVIGATION.proceed_to_check_pending_advance}
+          component={PendingAdvancesScreen}
+          options={{ headerShown: false }}
+        />
+        {/* <Stack.Screen
+          name={ADVANCE_PAY_NAVIGATION.proceed_to_pay_advance}
+          component={AdvancePaymentScreen}
+          options={{ headerShown: false }}
+        /> */}
       </Stack.Navigator>
     );
   }

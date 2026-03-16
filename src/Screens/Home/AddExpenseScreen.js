@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -46,7 +46,7 @@ const APPROVERS = [
     email: 'aparesh@startrackautomation.in',
   },
   {
-    name: 'Rishav Dasgupta',
+    name: 'Manoj Dasgupta',
     email: 'manoj@startrackautomation.in',
   },
   {
@@ -222,6 +222,82 @@ export default function AddExpenseScreen(props) {
   const [showAnim, setShowAnim] = useState(false);
   const isDarkMode = useColorScheme() === 'dark';
 
+  // ── Advance Balance ───────────────────────────────────────────────────
+  const [advanceBalance, setAdvanceBalance] = useState(0);
+  const [advanceIds, setAdvanceIds] = useState([]);
+
+  useEffect(() => {
+    fetchAdvanceBalance();
+  }, []);
+
+  const fetchAdvanceBalance = async () => {
+    try {
+      const uid = auth().currentUser?.uid;
+      const snap = await firestore()
+        .collection('users')
+        .doc(uid)
+        .collection('advances')
+        .get();
+
+      console.log('Total docs:', snap.size);
+
+      let totalBalance = 0;
+      const ids = [];
+
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (d.status !== 'Approved') return;
+
+        const paid = parseFloat(d.paidAmount ?? 0);
+        const usedAlready = parseFloat(d.usedInExpense ?? 0);
+        const available = paid - usedAlready;
+
+        if (available > 0) {
+          totalBalance += available;
+          ids.push(doc.id);
+        }
+      });
+
+      console.log('TOTAL balance', totalBalance);
+      setAdvanceBalance(totalBalance);
+      setAdvanceIds(ids);
+    } catch (error) {
+      console.log('Error:', error);
+    }
+  };
+
+  // const fetchAdvanceBalance = async () => {
+  //   try {
+  //     const uid = auth().currentUser?.uid;
+  //     const snap = await firestore()
+  //       .collection('users')
+  //       .doc(uid)
+  //       .collection('advances')
+  //       .where('status', '==', 'Approved')
+  //       .get();
+
+  //     console.log(snap.docs);
+
+  //     let totalBalance = 0;
+  //     const ids = [];
+  //     snap.docs.forEach(doc => {
+  //       const d = doc.data();
+  //       const approved = d.approvedAmount ?? d.requestedAmount ?? 0;
+  //       const paid = d.paidAmount || 0;
+  //       const remaining = approved - paid;
+  //       if (remaining > 0) {
+  //         totalBalance += remaining;
+  //         ids.push(doc.id);
+  //       }
+  //     });
+  //     console.log(totalBalance, 'TOTAL balance');
+  //     setAdvanceBalance(totalBalance);
+  //     setAdvanceIds(ids);
+  //   } catch (error) {
+  //     console.log('Advance balance fetch error:', error);
+  //   }
+  // };
+
   const addEntry = () => {
     setEntries(prev => [
       ...prev,
@@ -241,6 +317,8 @@ export default function AddExpenseScreen(props) {
     (sum, e) => sum + (parseFloat(e.amount) || 0),
     0,
   );
+  const advanceDeducted = Math.min(advanceBalance, totalAmount);
+  const netPayable = Math.max(totalAmount - advanceDeducted, 0);
 
   const submitExpense = async () => {
     try {
@@ -274,6 +352,9 @@ export default function AddExpenseScreen(props) {
           approverEmail: approver?.email || '',
           description: description,
           totalAmount: totalAmount,
+          advanceDeducted: advanceDeducted,
+          netPayable: netPayable,
+          advanceIds: advanceIds,
           createdAt: Date.now(),
           status: 'Pending',
           userId: user.uid,
@@ -450,6 +531,29 @@ export default function AddExpenseScreen(props) {
           />
         </View>
 
+        {/* Advance Balance Banner */}
+        {advanceBalance > 0 && (
+          <View style={styles.advanceBanner}>
+            <View style={styles.advanceBannerLeft}>
+              <Icon name="wallet-outline" size={20} color="#6366F1" />
+              <View>
+                <Text style={styles.advanceBannerTitle}>
+                  Advance Balance Available
+                </Text>
+                <Text style={styles.advanceBannerSub}>
+                  Will be auto-deducted from this expense
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.advanceBannerAmount}>
+              ₹
+              {advanceBalance.toLocaleString('en-IN', {
+                maximumFractionDigits: 2,
+              })}
+            </Text>
+          </View>
+        )}
+
         {/* Total Amount Banner */}
         <View style={styles.totalBanner}>
           <View>
@@ -460,6 +564,31 @@ export default function AddExpenseScreen(props) {
           </View>
           <Text style={styles.totalValue}>₹ {totalAmount.toFixed(2)}</Text>
         </View>
+
+        {/* Net Payable Banner — only show if advance deducted */}
+        {advanceDeducted > 0 && (
+          <View style={styles.netPayableBanner}>
+            <View style={styles.netPayableRow}>
+              <Text style={styles.netPayableLabel}>Total Expense</Text>
+              <Text style={styles.netPayableValue}>
+                ₹{totalAmount.toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.netPayableRow}>
+              <Text style={styles.netPayableLabel}>Advance Deducted</Text>
+              <Text style={[styles.netPayableValue, { color: '#6366F1' }]}>
+                - ₹{advanceDeducted.toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.netPayableDivider} />
+            <View style={styles.netPayableRow}>
+              <Text style={styles.netPayableFinalLabel}>Net Payable</Text>
+              <Text style={styles.netPayableFinalValue}>
+                ₹{netPayable.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Submit Button */}
         <TouchableOpacity
@@ -727,6 +856,86 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     minHeight: normalise(60),
     textAlignVertical: 'top',
+  },
+
+  // Advance Balance Banner
+  advanceBanner: {
+    backgroundColor: '#EEF2FF',
+    borderRadius: 14,
+    padding: normalise(14),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: normalise(20),
+    borderWidth: 1.5,
+    borderColor: '#6366F120',
+  },
+  advanceBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  advanceBannerTitle: {
+    fontSize: normalise(13),
+    fontWeight: '700',
+    color: '#6366F1',
+  },
+  advanceBannerSub: {
+    fontSize: normalise(11),
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  advanceBannerAmount: {
+    fontSize: normalise(16),
+    fontWeight: '800',
+    color: '#6366F1',
+  },
+
+  // Net Payable Banner
+  netPayableBanner: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: normalise(14),
+    marginBottom: normalise(14),
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  netPayableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: normalise(4),
+  },
+  netPayableLabel: {
+    fontSize: normalise(13),
+    color: '#9CA3AF',
+    fontWeight: '600',
+  },
+  netPayableValue: {
+    fontSize: normalise(13),
+    color: '#1F2937',
+    fontWeight: '700',
+  },
+  netPayableDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: normalise(6),
+  },
+  netPayableFinalLabel: {
+    fontSize: normalise(15),
+    fontWeight: '800',
+    color: '#1F2937',
+  },
+  netPayableFinalValue: {
+    fontSize: normalise(18),
+    fontWeight: '800',
+    color: '#34D399',
   },
 
   // Total Banner

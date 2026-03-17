@@ -189,9 +189,9 @@ const EntryRow = ({ entry, onChange, onRemove, showRemove, index }) => {
         />
       </View>
 
-      <TouchableOpacity style={styles.cameraBtn}>
+      {/* <TouchableOpacity style={styles.cameraBtn}>
         <Icon name="camera-outline" size={18} color="#9CA3AF" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {showRemove && (
         <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
@@ -466,7 +466,7 @@ export default function AddExpenseScreen(props) {
             <Text style={[styles.entryHeaderText, { width: 24 }]}>#</Text>
             <Text style={[styles.entryHeaderText, { flex: 1.2 }]}>Type</Text>
             <Text style={[styles.entryHeaderText, { flex: 1.5 }]}>Amount</Text>
-            <Text style={[styles.entryHeaderText, { width: 36 }]}>Pic</Text>
+            {/* <Text style={[styles.entryHeaderText, { width: 36 }]}>Pic</Text> */}
           </View>
 
           {entries.map((entry, idx) => (

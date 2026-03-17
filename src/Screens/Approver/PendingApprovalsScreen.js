@@ -19,7 +19,6 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import normalise from '../../Utils/Dimen';
 import MyStatusBar from '../../Utils/StatusBar';
-import { sendNotificationToApprover } from '../../Utils/sendNotification';
 
 // ── Reject Reason Modal ───────────────────────────────────────────────────
 const RejectModal = ({ visible, onClose, onConfirm }) => {
@@ -268,18 +267,15 @@ export default function PendingApprovalsScreen(props) {
     try {
       const currentUserEmail = auth().currentUser?.email;
       console.log('Approver email:', currentUserEmail);
-
-      // ✅ Only filter by status — no extra index needed
       const snap = await firestore()
         .collectionGroup('expenses')
         .where('status', '==', 'Pending')
         .orderBy('createdAt', 'desc')
         .get();
 
-      // ✅ Filter by approverEmail in JavaScript
       const data = await Promise.all(
         snap.docs
-          .filter(doc => doc.data().approverEmail === currentUserEmail) // ✅ filter here
+          .filter(doc => doc.data().approverEmail === currentUserEmail)
           .map(async doc => {
             const expense = { id: doc.id, ...doc.data() };
             try {
@@ -511,9 +507,14 @@ export default function PendingApprovalsScreen(props) {
         .doc(employeeUid)
         .get();
       const fcmToken = userDoc.data()?.fcmToken;
-      if (!fcmToken) return;
+      console.log('Employee UID:', employeeUid); // ✅ check uid
+      console.log('FCM Token:', fcmToken);
+      if (!fcmToken) {
+        console.log('❌ No FCM token found for employee!');
+        return;
+      }
 
-      await firestore()
+      const notifDoc = await firestore()
         .collection('notifications')
         .add({
           to: fcmToken,
@@ -526,6 +527,24 @@ export default function PendingApprovalsScreen(props) {
           createdAt: Date.now(),
           sent: false,
         });
+
+      console.log('✅ Notification doc created:', notifDoc.id); // ✅ check doc created
+      // if (!fcmToken) return;
+
+      // await firestore()
+      //   .collection('notifications')
+      //   .add({
+      //     to: fcmToken,
+      //     toUid: employeeUid,
+      //     fromUid: auth().currentUser?.uid || '',
+      //     fromName: auth().currentUser?.displayName || 'Approver',
+      //     title,
+      //     body,
+      //     data,
+      //     createdAt: Date.now(),
+      //     sent: false,
+      //   });
+      // console.log('✅ Notification doc created:', notifDoc.id); // ✅ check doc created
     } catch (error) {
       console.log('Notification error:', error);
     }

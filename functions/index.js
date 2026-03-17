@@ -1,7 +1,9 @@
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 
-admin.initializeApp();
+admin.initializeApp({
+  projectId: 'rn-startrack-app',
+});
 
 exports.sendPushNotification = functions
   .region('asia-south1')

@@ -25,13 +25,13 @@ const APPROVERS = [
   { name: 'Amit Das', email: 'amit@startrackautomation.in' },
   { name: 'Aparesh Mondal', email: 'aparesh@startrackautomation.in' },
   { name: 'Manoj Dasgupta', email: 'manoj@startrackautomation.in' },
-  { name: 'Shubhankar(Developer)', email: 'shubhankarkoner.sta@gmail.com' },
+  // { name: 'Shubhankar(Developer)', email: 'shubhankarkoner.sta@gmail.com' },
 ];
 
 const ADVANCE_REASONS = [
   { label: 'Travel', icon: 'airplane', color: '#38BDF8' },
   { label: 'Medical', icon: 'medical-bag', color: '#F87171' },
-  { label: 'Office Work', icon: 'briefcase-outline', color: '#A78BFA' },
+  { label: 'Material Purchase', icon: 'briefcase-outline', color: '#A78BFA' },
   { label: 'Field Work', icon: 'map-marker-outline', color: '#FB923C' },
   { label: 'Training', icon: 'school-outline', color: '#34D399' },
   { label: 'Other', icon: 'dots-horizontal', color: '#9CA3AF' },

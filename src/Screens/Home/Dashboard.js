@@ -26,6 +26,7 @@ import auth from '@react-native-firebase/auth';
 import usePushNotification from '../../Utils/usePushNotification';
 import { useFocusEffect } from '@react-navigation/native';
 import showErrorAlert from '../../Utils/Toast';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const EMPLOYEE_MENU = [
   {
@@ -61,37 +62,13 @@ const EMPLOYEE_MENU = [
     bg: '#EEF2FF',
   },
   {
-    id: 4,
+    id: 5,
     title: 'My Advances',
     icon: 'cash-fast',
     path: ADVANCE_PAY_NAVIGATION.my_advance_pay_list,
     color: '#8fcc49',
     bg: '#EEF2FF',
   },
-  // {
-  //   id: 4,
-  //   title: 'Approved',
-  //   icon: 'check-decagram-outline',
-  //   path: DASHBOARD_NAVIGATION.app_grid_employee_list,
-  //   color: '#34D399',
-  //   bg: '#F0FFF8',
-  // },
-  // {
-  //   id: 5,
-  //   title: 'Rejected',
-  //   icon: 'close-octagon-outline',
-  //   path: '',
-  //   color: '#FB923C',
-  //   bg: '#FFF5F0',
-  // },
-  // {
-  //   id: 6,
-  //   title: 'Reports',
-  //   icon: 'chart-areaspline',
-  //   path: '',
-  //   color: '#38BDF8',
-  //   bg: '#F0F9FF',
-  // },
 ];
 
 const APPROVER_MENU = [
@@ -111,14 +88,6 @@ const APPROVER_MENU = [
     color: '#4ECDC4',
     bg: '#F0FFFE',
   },
-  // {
-  //   id: 3,
-  //   title: 'Pay Advances',
-  //   icon: 'cash-fast',
-  //   path: ADVANCE_PAY_NAVIGATION.proceed_to_pay_advance,
-  //   color: '#6366F1',
-  //   bg: '#EEF2FF',
-  // },
   {
     id: 3,
     title: 'Advance Requests',
@@ -127,30 +96,14 @@ const APPROVER_MENU = [
     color: '#cc9a2d',
     bg: '#EEF2FF',
   },
-  // {
-  //   id: 4,
-  //   title: 'Rejected',
-  //   icon: 'close-octagon-outline',
-  //   path: '',
-  //   color: '#FB923C',
-  //   bg: '#FFF5F0',
-  // },
   {
-    id: 5,
+    id: 4,
     title: 'Employees',
     icon: 'account-group-outline',
     path: DASHBOARD_NAVIGATION.app_grid_employee_list,
     color: '#A78BFA',
     bg: '#F5F0FF',
   },
-  // {
-  //   id: 6,
-  //   title: 'Reports',
-  //   icon: 'chart-areaspline',
-  //   path: '',
-  //   color: '#38BDF8',
-  //   bg: '#F0F9FF',
-  // },
 ];
 
 function AnimatedCard({ item, index, onPress }) {
@@ -174,6 +127,7 @@ function AnimatedCard({ item, index, onPress }) {
       tension: 200,
       friction: 10,
     }).start();
+
   const handlePressOut = () =>
     Animated.spring(pressAnim, {
       toValue: 1,
@@ -224,6 +178,8 @@ export default function Dashboard(props) {
   const [pendingCount, setPendingCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
+  const [advanceBalance, setAdvanceBalance] = useState(0);
+
   const headerAnim = useRef(new Animated.Value(-60)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const backPressedOnce = useRef(false);
@@ -241,7 +197,6 @@ export default function Dashboard(props) {
         setTimeout(() => {
           backPressedOnce.current = false;
         }, 2000);
-
         return true;
       };
 
@@ -258,6 +213,7 @@ export default function Dashboard(props) {
   useEffect(() => {
     fetchUserData();
     fetchExpenseCounts();
+    fetchAdvanceBalance();
     Animated.parallel([
       Animated.spring(headerAnim, {
         toValue: 0,
@@ -277,10 +233,7 @@ export default function Dashboard(props) {
     try {
       const uid = auth().currentUser?.uid;
       const doc = await firestore().collection('users').doc(uid).get();
-      if (doc.exists) {
-        const data = doc.data();
-        setUserData(data);
-      }
+      if (doc.exists) setUserData(doc.data());
     } catch (error) {
       console.log('Error fetching user:', error);
     } finally {
@@ -293,10 +246,8 @@ export default function Dashboard(props) {
       var role = '';
       const uid = auth().currentUser?.uid;
       const doc = await firestore().collection('users').doc(uid).get();
-      if (doc.exists) {
-        const data = doc.data();
-        role = data?.role;
-      }
+      if (doc.exists) role = doc.data()?.role;
+
       if (role === 'approver') {
         const currentUserEmail = auth().currentUser?.email;
         const snap = await firestore().collectionGroup('expenses').get();
@@ -319,25 +270,47 @@ export default function Dashboard(props) {
               e.status === 'Rejected' && e.approverEmail === currentUserEmail,
           ).length,
         );
-        setLoading(false);
       } else {
-        // Employee — own expenses only
-        const base = firestore()
+        const snap = await firestore()
           .collection('users')
           .doc(uid)
-          .collection('expenses');
-
-        const snap = await base.get();
+          .collection('expenses')
+          .get();
         const all = snap.docs.map(d => d.data());
 
         setPendingCount(all.filter(e => e.status === 'Pending').length);
         setApprovedCount(all.filter(e => e.status === 'Approved').length);
         setRejectedCount(all.filter(e => e.status === 'Rejected').length);
-        setLoading(false);
       }
+      setLoading(false);
     } catch (error) {
       setLoading(false);
       console.log('Error fetching counts:', error);
+    }
+  };
+
+  // ✅ Fetch available advance balance — employee only
+  const fetchAdvanceBalance = async () => {
+    try {
+      const uid = auth().currentUser?.uid;
+      const snap = await firestore()
+        .collection('users')
+        .doc(uid)
+        .collection('advances')
+        .get();
+
+      let totalBalance = 0;
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (d.status !== 'Approved') return;
+        const paid = parseFloat(d.paidAmount ?? 0);
+        const used = parseFloat(d.usedInExpense ?? 0);
+        const available = paid - used;
+        if (available > 0) totalBalance += available;
+      });
+      setAdvanceBalance(totalBalance);
+    } catch (error) {
+      console.log('Advance balance error:', error);
     }
   };
 
@@ -364,6 +337,7 @@ export default function Dashboard(props) {
     <SafeAreaView style={styles.container}>
       <MyStatusBar barStyle="light-content" backgroundColor={'#E8453C'} />
 
+      {/* Header */}
       <Animated.View
         style={[
           styles.header,
@@ -400,46 +374,84 @@ export default function Dashboard(props) {
           </TouchableOpacity>
         </View>
       </Animated.View>
-
-      <View style={styles.statsBanner}>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: '#F59E0B' }]}>
-            {pendingCount}
-          </Text>
-          <Text style={styles.statLabel}>
-            {isApprover ? 'To Review' : 'Pending'}
-          </Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Stats Banner */}
+        <View style={styles.statsBanner}>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: '#F59E0B' }]}>
+              {pendingCount}
+            </Text>
+            <Text style={styles.statLabel}>
+              {isApprover ? 'To Review' : 'Pending'}
+            </Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: '#34D399' }]}>
+              {approvedCount}
+            </Text>
+            <Text style={styles.statLabel}>Approved</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: '#FB923C' }]}>
+              {rejectedCount}
+            </Text>
+            <Text style={styles.statLabel}>Rejected</Text>
+          </View>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: '#34D399' }]}>
-            {approvedCount}
-          </Text>
-          <Text style={styles.statLabel}>Approved</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: '#FB923C' }]}>
-            {rejectedCount}
-          </Text>
-          <Text style={styles.statLabel}>Rejected</Text>
-        </View>
-      </View>
 
-      <Text style={styles.sectionLabel}>
-        {isApprover ? 'Approver Actions' : 'Quick Actions'}
-      </Text>
+        {/* Advance Balance Card — employee only, only if balance > 0 */}
+        {!isApprover && advanceBalance > 0 && (
+          <TouchableOpacity
+            style={styles.advanceCard}
+            onPress={() =>
+              props.navigation.navigate(
+                ADVANCE_PAY_NAVIGATION.my_advance_pay_list,
+              )
+            }
+            activeOpacity={0.85}
+          >
+            <View style={styles.advanceCardLeft}>
+              <View style={styles.advanceIconWrap}>
+                <Icon name="wallet-outline" size={20} color="#6366F1" />
+              </View>
+              <View>
+                <Text style={styles.advanceCardLabel}>Advance Balance</Text>
+                <Text style={styles.advanceCardSub}>
+                  Available for next expense
+                </Text>
+              </View>
+            </View>
+            <View style={styles.advanceCardRight}>
+              <Text style={styles.advanceCardAmount}>
+                ₹
+                {advanceBalance.toLocaleString('en-IN', {
+                  maximumFractionDigits: 0,
+                })}
+              </Text>
+              <Icon name="chevron-right" size={16} color="#6366F1" />
+            </View>
+          </TouchableOpacity>
+        )}
 
-      <View style={styles.grid}>
-        {MENU.map((item, index) => (
-          <AnimatedCard
-            key={item.id}
-            item={item}
-            index={index}
-            onPress={() => item.path && props.navigation.navigate(item.path)}
-          />
-        ))}
-      </View>
+        {/* Section Label */}
+        <Text style={styles.sectionLabel}>
+          {isApprover ? 'Approver Actions' : 'Quick Actions'}
+        </Text>
+
+        {/* Menu Grid */}
+        <View style={styles.grid}>
+          {MENU.map((item, index) => (
+            <AnimatedCard
+              key={item.id}
+              item={item}
+              index={index}
+              onPress={() => item.path && props.navigation.navigate(item.path)}
+            />
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -458,6 +470,8 @@ const styles = StyleSheet.create({
     color: '#999',
     fontWeight: '500',
   },
+
+  // Header
   header: {
     backgroundColor: '#E8453C',
     paddingHorizontal: normalise(16),
@@ -507,6 +521,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E8453C',
   },
+
+  // Stats Banner
   statsBanner: {
     backgroundColor: '#fff',
     marginHorizontal: normalise(16),
@@ -536,6 +552,58 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statDivider: { width: 1, height: 36, backgroundColor: '#F0F0F0' },
+
+  // Advance Balance Card
+  advanceCard: {
+    backgroundColor: '#EEF2FF',
+    marginHorizontal: normalise(16),
+    marginTop: normalise(10),
+    borderRadius: 14,
+    paddingVertical: normalise(12),
+    paddingHorizontal: normalise(14),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: '#6366F125',
+    elevation: 1,
+  },
+  advanceCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  advanceIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  advanceCardLabel: {
+    fontSize: normalise(13),
+    fontWeight: '700',
+    color: '#4338CA',
+  },
+  advanceCardSub: {
+    fontSize: normalise(11),
+    color: '#9CA3AF',
+    marginTop: 1,
+  },
+  advanceCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  advanceCardAmount: {
+    fontSize: normalise(16),
+    fontWeight: '800',
+    color: '#6366F1',
+  },
+
+  // Section Label
   sectionLabel: {
     fontSize: normalise(13),
     fontWeight: '700',
@@ -546,6 +614,8 @@ const styles = StyleSheet.create({
     marginTop: normalise(20),
     marginBottom: normalise(4),
   },
+
+  // Grid
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

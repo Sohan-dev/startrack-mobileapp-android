@@ -11,6 +11,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import normalise from '../../Utils/Dimen';
 import MyStatusBar from '../../Utils/StatusBar';
+import { openUpiAndConfirm } from '../../Utils/UpiPayment'; // ✅ UPI utility
 
 const PAYMENT_METHODS = [
   { id: 'cash',       label: 'Cash',       icon: 'cash',                color: '#34D399' },
@@ -53,6 +54,29 @@ const ActionModal = ({ visible, advance, onClose, onConfirm }) => {
     if (action === 'reject' && !rejectionReason.trim()) {
       Alert.alert('Rejection Reason', 'Please enter a reason for rejection.'); return;
     }
+
+    // ✅ UPI — open UPI app first then confirm
+    if (action === 'approve' && paymentMethod?.id === 'upi') {
+      openUpiAndConfirm({
+        upiId:  advance.employeeUpiId || '',
+        name:   advance.employeeName  || 'Employee',
+        amount: parseFloat(editedAmount),
+        note:   `Advance payment - ${advance.reason || ''}`,
+        onConfirm: () => {
+          onConfirm({
+            action,
+            editedAmount:    parseFloat(editedAmount),
+            paymentMethod,
+            reference,
+            approverNote,
+            rejectionReason,
+          });
+        },
+      });
+      return; // ✅ Don't call onConfirm directly for UPI
+    }
+
+    // Cash / Net Banking — confirm directly
     onConfirm({ action, editedAmount: parseFloat(editedAmount), paymentMethod, reference, approverNote, rejectionReason });
   };
 
@@ -148,6 +172,47 @@ const ActionModal = ({ visible, advance, onClose, onConfirm }) => {
                     ))}
                   </View>
 
+                  {/* ✅ UPI ID Card — show when UPI selected */}
+                  {paymentMethod?.id === 'upi' && (
+                    <View style={styles.upiInfoCard}>
+                      <View style={styles.upiInfoLeft}>
+                        <View style={styles.upiInfoIconWrap}>
+                          <Icon name="contactless-payment" size={20} color="#6366F1" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.upiInfoLabel}>Employee UPI ID</Text>
+                          <Text style={[
+                            styles.upiInfoValue,
+                            !advance.employeeUpiId && { color: '#F59E0B' },
+                          ]}>
+                            {advance.employeeUpiId || 'Not added by employee ⚠️'}
+                          </Text>
+                        </View>
+                      </View>
+                      {advance.employeeUpiId ? (
+                        <View style={styles.upiSetBadge}>
+                          <Icon name="check-circle" size={14} color="#34D399" />
+                          <Text style={styles.upiSetText}>Ready</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.upiPendingBadge}>
+                          <Icon name="alert-circle-outline" size={14} color="#F59E0B" />
+                          <Text style={styles.upiPendingText}>Missing</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
+                  {/* UPI hint */}
+                  {paymentMethod?.id === 'upi' && (
+                    <View style={styles.upiHint}>
+                      <Icon name="information-outline" size={13} color="#6366F1" />
+                      <Text style={styles.upiHintText}>
+                        Tapping "Approve & Pay" will open your UPI app with amount pre-filled. Complete payment and confirm.
+                      </Text>
+                    </View>
+                  )}
+
                   <Text style={styles.fieldLabel}>Transaction Reference (Optional)</Text>
                   <TextInput
                     style={styles.textInput}
@@ -214,12 +279,23 @@ const ActionModal = ({ visible, advance, onClose, onConfirm }) => {
                   ]}
                   onPress={handleConfirm}
                 >
-                  <Icon name={action === 'reject' ? 'close-circle-outline' : 'cash-check'} size={18} color="#fff" />
+                  <Icon
+                    name={
+                      action === 'reject'                       ? 'close-circle-outline' :
+                      action === 'approve' && paymentMethod?.id === 'upi' ? 'open-in-app' :
+                      'cash-check'
+                    }
+                    size={18}
+                    color="#fff"
+                  />
                   <Text style={styles.confirmBtnText}>
-                    {action === 'approve' ? 'Approve & Pay' : action === 'reject' ? 'Reject' : 'Confirm'}
+                    {action === 'approve' && paymentMethod?.id === 'upi' ? 'Open UPI & Pay' :
+                     action === 'approve' ? 'Approve & Pay' :
+                     action === 'reject'  ? 'Reject' : 'Confirm'}
                   </Text>
                 </TouchableOpacity>
               </View>
+
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -265,6 +341,18 @@ function AdvanceCard({ item, index, onAction }) {
             <Icon name={item.reasonIcon || 'cash'} size={16} color={item.reasonColor || '#9CA3AF'} />
           </View>
           <Text style={styles.reasonText}>{item.reason}</Text>
+          {/* ✅ UPI ID indicator on card */}
+          {item.employeeUpiId ? (
+            <View style={styles.upiCardBadge}>
+              <Icon name="contactless-payment" size={11} color="#6366F1" />
+              <Text style={styles.upiCardBadgeText}>UPI Ready</Text>
+            </View>
+          ) : (
+            <View style={styles.upiCardBadgeMissing}>
+              <Icon name="alert-circle-outline" size={11} color="#F59E0B" />
+              <Text style={styles.upiCardBadgeMissingText}>No UPI</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.amountBanner}>
@@ -294,12 +382,12 @@ function AdvanceCard({ item, index, onAction }) {
 
 // ── Main Screen ───────────────────────────────────────────────────────────
 export default function PendingAdvancesScreen(props) {
-  const [advances, setAdvances]             = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [refreshing, setRefreshing]         = useState(false);
-  const [processing, setProcessing]         = useState(false);
+  const [advances, setAdvances]               = useState([]);
+  const [loading, setLoading]                 = useState(true);
+  const [refreshing, setRefreshing]           = useState(false);
+  const [processing, setProcessing]           = useState(false);
   const [selectedAdvance, setSelectedAdvance] = useState(null);
-  const [showModal, setShowModal]           = useState(false);
+  const [showModal, setShowModal]             = useState(false);
 
   const headerAnim    = useRef(new Animated.Value(-50)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -316,12 +404,31 @@ export default function PendingAdvancesScreen(props) {
     try {
       const currentUserEmail = auth().currentUser?.email;
       const snap = await firestore().collectionGroup('advances').get();
-      const data = snap.docs
-        .filter(doc => {
-          const d = doc.data();
-          return d.approverEmail === currentUserEmail && d.status === 'Pending';
-        })
-        .map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const data = await Promise.all(
+        snap.docs
+          .filter(doc => {
+            const d = doc.data();
+            return d.approverEmail === currentUserEmail && d.status === 'Pending';
+          })
+          .map(async doc => {
+            const advance = { id: doc.id, ...doc.data() };
+            try {
+              // ✅ Fetch employee details including UPI ID
+              const userDoc  = await firestore().collection('users').doc(advance.employeeUid).get();
+              const userData = userDoc.data();
+              advance.employeeName  = userData?.displayName || 'Unknown';
+              advance.employeeEmail = userData?.email       || '';
+              advance.employeeUpiId = userData?.upiId       || ''; // ✅ fetch UPI ID
+            } catch {
+              advance.employeeName  = 'Unknown';
+              advance.employeeEmail = '';
+              advance.employeeUpiId = '';
+            }
+            return advance;
+          })
+      );
+
       data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setAdvances(data);
     } catch (error) {
@@ -345,14 +452,14 @@ export default function PendingAdvancesScreen(props) {
         ? {
             status:         'Approved',
             approvedAmount: parseFloat(editedAmount),
-            paidAmount:     parseFloat(editedAmount), // paid immediately on approval
+            paidAmount:     parseFloat(editedAmount),
             paymentStatus:  'Paid',
             paymentMethod:  paymentMethod.label,
             paymentRef:     reference || '',
             approverNote:   approverNote || '',
             approvedBy:     approverName,
             approvedAt:     Date.now(),
-            usedInExpense:  0, // tracks deductions in future expense submissions
+            usedInExpense:  0,
           }
         : {
             status:          'Rejected',
@@ -366,7 +473,6 @@ export default function PendingAdvancesScreen(props) {
         .collection('advances').doc(selectedAdvance.id)
         .update(updateData);
 
-      // Save payment record
       if (action === 'approve') {
         await firestore().collection('advance_payments').add({
           advanceId:     selectedAdvance.id,
@@ -489,6 +595,7 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 14, color: '#9CA3AF', fontWeight: '500' },
   listContent: { paddingHorizontal: normalise(16), paddingBottom: normalise(32), flexGrow: 1 },
+
   header: {
     backgroundColor: '#E8453C', paddingHorizontal: normalise(16), paddingVertical: normalise(14),
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -498,6 +605,8 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: normalise(18), fontWeight: '700', textAlign: 'center' },
   headerSubtitle: { color: 'rgba(255,255,255,0.75)', fontSize: normalise(11), textAlign: 'center' },
   headerBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+
+  // Card
   cardWrapper: { marginBottom: normalise(12), marginTop: normalise(4) },
   card: { backgroundColor: '#fff', borderRadius: 18, padding: normalise(16), elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: normalise(12), gap: 10 },
@@ -509,21 +618,22 @@ const styles = StyleSheet.create({
   dateText: { fontSize: normalise(11), color: '#9CA3AF' },
   reasonRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: normalise(12) },
   reasonIconWrap: { width: 30, height: 30, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  reasonText: { fontSize: normalise(13), color: '#6B7280', fontWeight: '600' },
-  amountBanner: {
-    backgroundColor: '#F9FAFB', borderRadius: 14, padding: normalise(14),
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: normalise(10), borderWidth: 1, borderColor: '#E5E7EB',
-  },
+  reasonText: { fontSize: normalise(13), color: '#6B7280', fontWeight: '600', flex: 1 },
+
+  // UPI card badges
+  upiCardBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#EEF2FF', paddingHorizontal: normalise(6), paddingVertical: normalise(3), borderRadius: 20 },
+  upiCardBadgeText: { fontSize: normalise(10), color: '#6366F1', fontWeight: '700' },
+  upiCardBadgeMissing: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FFFBEB', paddingHorizontal: normalise(6), paddingVertical: normalise(3), borderRadius: 20 },
+  upiCardBadgeMissingText: { fontSize: normalise(10), color: '#F59E0B', fontWeight: '700' },
+
+  amountBanner: { backgroundColor: '#F9FAFB', borderRadius: 14, padding: normalise(14), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: normalise(10), borderWidth: 1, borderColor: '#E5E7EB' },
   amountLabel: { fontSize: normalise(10), color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' },
   amountValue: { fontSize: normalise(18), fontWeight: '800', color: '#1F2937', marginTop: 2 },
   descriptionText: { fontSize: normalise(12), color: '#9CA3AF', fontStyle: 'italic', marginBottom: normalise(12) },
-  actionCardBtn: {
-    backgroundColor: '#E8453C', borderRadius: 12, paddingVertical: normalise(12),
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    elevation: 2, shadowColor: '#E8453C', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6,
-  },
+  actionCardBtn: { backgroundColor: '#E8453C', borderRadius: 12, paddingVertical: normalise(12), flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, elevation: 2, shadowColor: '#E8453C', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6 },
   actionCardBtnText: { color: '#fff', fontSize: normalise(14), fontWeight: '700' },
+
+  // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: normalise(20), maxHeight: '92%' },
   sheetHandle: { width: 40, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, alignSelf: 'center', marginBottom: normalise(16) },
@@ -550,6 +660,22 @@ const styles = StyleSheet.create({
   methodRow: { flexDirection: 'row', gap: 8 },
   methodBtn: { flex: 1, alignItems: 'center', paddingVertical: normalise(12), borderRadius: 12, borderWidth: 1.5, borderColor: '#E5E7EB', backgroundColor: '#F9FAFB', gap: 4 },
   methodLabel: { fontSize: normalise(11), color: '#9CA3AF', fontWeight: '600' },
+
+  // UPI Info Card in modal
+  upiInfoCard: { backgroundColor: '#EEF2FF', borderRadius: 12, padding: normalise(12), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: normalise(8), borderWidth: 1.5, borderColor: '#6366F120' },
+  upiInfoLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  upiInfoIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  upiInfoLabel: { fontSize: normalise(10), color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3 },
+  upiInfoValue: { fontSize: normalise(13), fontWeight: '700', color: '#6366F1', marginTop: 2 },
+  upiSetBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#F0FFF8', paddingHorizontal: normalise(8), paddingVertical: normalise(4), borderRadius: 20 },
+  upiSetText: { fontSize: normalise(11), color: '#34D399', fontWeight: '700' },
+  upiPendingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FFFBEB', paddingHorizontal: normalise(8), paddingVertical: normalise(4), borderRadius: 20 },
+  upiPendingText: { fontSize: normalise(11), color: '#F59E0B', fontWeight: '700' },
+
+  // UPI hint
+  upiHint: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, backgroundColor: '#F5F5FF', borderRadius: 10, padding: normalise(10), marginTop: normalise(6) },
+  upiHintText: { flex: 1, fontSize: normalise(11), color: '#6366F1', lineHeight: normalise(16) },
+
   textInput: { backgroundColor: '#F9FAFB', borderRadius: 12, padding: normalise(12), fontSize: normalise(14), color: '#1F2937', borderWidth: 1.5, borderColor: '#E5E7EB', marginBottom: normalise(4) },
   summaryBanner: { backgroundColor: '#F0FFF8', borderRadius: 14, padding: normalise(14), marginTop: normalise(12), borderWidth: 1.5, borderColor: '#34D39930' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: normalise(4) },
@@ -563,6 +689,7 @@ const styles = StyleSheet.create({
   confirmBtnReject:  { backgroundColor: '#F87171' },
   confirmBtnDisabled: { backgroundColor: '#D1D5DB' },
   confirmBtnText: { color: '#fff', fontSize: normalise(14), fontWeight: '700' },
+
   processingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   processingText: { color: '#fff', fontSize: normalise(14), fontWeight: '600', marginTop: 12 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: normalise(80) },

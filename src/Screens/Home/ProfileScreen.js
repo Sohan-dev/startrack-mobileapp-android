@@ -17,8 +17,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-// import ImageCropPicker from 'react-native-image-crop-picker';
-// import storage from '@react-native-firebase/storage';
 import normalise from '../../Utils/Dimen';
 import MyStatusBar from '../../Utils/StatusBar';
 import { useDispatch } from 'react-redux';
@@ -45,6 +43,19 @@ const FIELDS = [
     icon: 'phone-outline',
     keyboard: 'phone-pad',
   },
+  // ✅ Only show UPI ID for employees
+  ...(!isApprover
+    ? [
+        {
+          key: 'upiId',
+          label: 'UPI ID',
+          icon: 'contactless-payment',
+          keyboard: 'email-address',
+          placeholder: 'yourname@upi',
+          color: '#6366F1',
+        },
+      ]
+    : []),
 ];
 
 export default function ProfileScreen(props) {
@@ -90,37 +101,7 @@ export default function ProfileScreen(props) {
     }
   };
 
-  // const handleChangePhoto = async () => {
-  //   try {
-  //     const image = await ImageCropPicker.openPicker({
-  //       width: 400,
-  //       height: 400,
-  //       cropping: true,
-  //       cropperCircleOverlay: true,
-  //       compressImageQuality: 0.7,
-  //     });
-
-  //     setUploadingPhoto(true);
-  //     const uid = auth().currentUser?.uid;
-  //     const ref = storage().ref(`profile_photos/${uid}.jpg`);
-  //     await ref.putFile(image.path);
-  //     const url = await ref.getDownloadURL();
-
-  //     await firestore().collection('users').doc(uid).update({ photoURL: url });
-  //     await auth().currentUser.updateProfile({ photoURL: url });
-
-  //     setUserData(prev => ({ ...prev, photoURL: url }));
-  //     setEditData(prev => ({ ...prev, photoURL: url }));
-  //     Alert.alert('Success', 'Profile photo updated!');
-  //   } catch (error) {
-  //     if (error.code !== 'E_PICKER_CANCELLED') {
-  //       Alert.alert('Error', 'Failed to update photo');
-  //       console.log('Photo error:', error);
-  //     }
-  //   } finally {
-  //     setUploadingPhoto(false);
-  //   }
-  // };
+  const isApprover = userData?.role === 'approver';
 
   const handleSave = async () => {
     try {
@@ -133,6 +114,7 @@ export default function ProfileScreen(props) {
         .update({
           displayName: editData.displayName || '',
           phoneNumber: editData.phoneNumber || '',
+          upiId: editData.upiId || '',
         });
 
       await auth().currentUser.updateProfile({
@@ -166,7 +148,6 @@ export default function ProfileScreen(props) {
                   '713806015170-8v61kilunb46omim0rg9iosigi5l5rdn.apps.googleusercontent.com',
                 offlineAccess: true,
               });
-
               await GoogleSignin.revokeAccess();
               await GoogleSignin.signOut();
               await auth().signOut();
@@ -182,22 +163,6 @@ export default function ProfileScreen(props) {
       { cancelable: false },
     );
   };
-
-  // const handleLogout = () => {
-  //   Alert.alert(
-  //     'Logout',
-  //     'Are you sure you want to logout?',
-  //     [
-  //       { text: 'Cancel', style: 'cancel' },
-  //       {
-  //         text: 'Logout',
-  //         style: 'destructive',
-  //         onPress: () => dispatch(getLogout()),
-  //       },
-  //     ],
-  //     { cancelable: false },
-  //   );
-  // };
 
   const formatDate = dateStr => {
     if (!dateStr) return 'N/A';
@@ -229,10 +194,7 @@ export default function ProfileScreen(props) {
       <Animated.View
         style={[
           styles.header,
-          {
-            transform: [{ translateY: headerAnim }],
-            opacity: headerOpacity,
-          },
+          { transform: [{ translateY: headerAnim }], opacity: headerOpacity },
         ]}
       >
         <TouchableOpacity
@@ -284,11 +246,8 @@ export default function ProfileScreen(props) {
                 </Text>
               </View>
             )}
-
-            {/* Camera Button */}
             <TouchableOpacity
               style={styles.cameraBtn}
-              // onPress={handleChangePhoto}
               disabled={uploadingPhoto}
             >
               <Icon name="camera" size={16} color="#fff" />
@@ -300,48 +259,128 @@ export default function ProfileScreen(props) {
           </Text>
           <Text style={styles.profileEmail}>{userData.email || ''}</Text>
 
-          {/* Member Since Badge */}
           <View style={styles.memberBadge}>
             <Icon name="shield-check-outline" size={13} color="#E8453C" />
             <Text style={styles.memberText}>
               Member since {formatDate(userData.createdAt)}
             </Text>
           </View>
+
+          {/* ✅ UPI ID quick display badge */}
+          {userData.upiId ? (
+            <View style={styles.upiBadge}>
+              <Icon name="contactless-payment" size={13} color="#6366F1" />
+              <Text style={styles.upiText}>{userData.upiId}</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.upiAddBadge}
+              onPress={() => setIsEditing(true)}
+            >
+              <Icon name="plus-circle-outline" size={13} color="#6366F1" />
+              <Text style={styles.upiAddText}>Add UPI ID for payments</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Info Cards */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Account Details</Text>
 
-          {FIELDS.map((field, index) => (
-            <View key={field.key} style={styles.fieldCard}>
-              <View style={styles.fieldIcon}>
-                <Icon name={field.icon} size={20} color="#E8453C" />
+          {FIELDS.map(field => (
+            <View
+              key={field.key}
+              style={[
+                styles.fieldCard,
+                field.key === 'upiId' && styles.fieldCardUpi,
+              ]}
+            >
+              <View
+                style={[
+                  styles.fieldIcon,
+                  field.key === 'upiId' && { backgroundColor: '#EEF2FF' },
+                ]}
+              >
+                <Icon
+                  name={field.icon}
+                  size={20}
+                  color={field.color || '#E8453C'}
+                />
               </View>
               <View style={styles.fieldContent}>
                 <Text style={styles.fieldLabel}>{field.label}</Text>
                 {isEditing && field.editable !== false ? (
                   <TextInput
-                    style={styles.fieldInput}
+                    style={[
+                      styles.fieldInput,
+                      field.key === 'upiId' && { borderBottomColor: '#6366F1' },
+                    ]}
                     value={editData[field.key] || ''}
                     onChangeText={text =>
                       setEditData(prev => ({ ...prev, [field.key]: text }))
                     }
                     keyboardType={field.keyboard}
-                    placeholder={`Enter ${field.label}`}
+                    placeholder={field.placeholder || `Enter ${field.label}`}
                     placeholderTextColor="#C4C4C4"
+                    autoCapitalize="none"
                   />
                 ) : (
-                  <Text style={styles.fieldValue}>
-                    {userData[field.key] || 'Not provided'}
+                  <Text
+                    style={[
+                      styles.fieldValue,
+                      field.key === 'upiId' &&
+                        !userData[field.key] && {
+                          color: '#C4C4C4',
+                          fontStyle: 'italic',
+                        },
+                      field.key === 'upiId' &&
+                        userData[field.key] && { color: '#6366F1' },
+                    ]}
+                  >
+                    {userData[field.key] ||
+                      (field.key === 'upiId'
+                        ? 'Not added yet'
+                        : 'Not provided')}
                   </Text>
                 )}
               </View>
               {field.editable === false && (
                 <Icon name="lock-outline" size={16} color="#D1D5DB" />
               )}
+              {field.key === 'upiId' && !isEditing && (
+                <View style={styles.upiVerifiedBadge}>
+                  {userData.upiId ? (
+                    <>
+                      <Icon name="check-circle" size={14} color="#34D399" />
+                      <Text style={styles.upiVerifiedText}>Set</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Icon
+                        name="alert-circle-outline"
+                        size={14}
+                        color="#F59E0B"
+                      />
+                      <Text
+                        style={[styles.upiVerifiedText, { color: '#F59E0B' }]}
+                      >
+                        Pending
+                      </Text>
+                    </>
+                  )}
+                </View>
+              )}
             </View>
           ))}
+
+          {/* UPI hint */}
+          <View style={styles.upiHint}>
+            <Icon name="information-outline" size={13} color="#6366F1" />
+            <Text style={styles.upiHintText}>
+              Your UPI ID is used by approvers to send payments directly to your
+              account
+            </Text>
+          </View>
         </View>
 
         {/* Activity Section */}
@@ -401,10 +440,7 @@ export default function ProfileScreen(props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F4F6FB',
-  },
+  container: { flex: 1, backgroundColor: '#F4F6FB' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -418,7 +454,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Header
   header: {
     backgroundColor: '#E8453C',
     paddingHorizontal: normalise(16),
@@ -448,21 +483,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   scrollContent: {
     paddingHorizontal: normalise(16),
     paddingBottom: normalise(16),
   },
 
   // Avatar
-  avatarSection: {
-    alignItems: 'center',
-    paddingVertical: normalise(24),
-  },
-  avatarWrapper: {
-    position: 'relative',
-    marginBottom: normalise(12),
-  },
+  avatarSection: { alignItems: 'center', paddingVertical: normalise(24) },
+  avatarWrapper: { position: 'relative', marginBottom: normalise(12) },
   avatar: {
     width: normalise(100),
     height: normalise(100),
@@ -521,16 +549,37 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: normalise(10),
   },
-  memberText: {
-    fontSize: normalise(11),
-    color: '#E8453C',
-    fontWeight: '600',
+  memberText: { fontSize: normalise(11), color: '#E8453C', fontWeight: '600' },
+
+  // UPI Badges
+  upiBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: normalise(12),
+    paddingVertical: normalise(5),
+    borderRadius: 20,
+    marginTop: normalise(8),
   },
+  upiText: { fontSize: normalise(11), color: '#6366F1', fontWeight: '700' },
+  upiAddBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#F5F5FF',
+    paddingHorizontal: normalise(12),
+    paddingVertical: normalise(5),
+    borderRadius: 20,
+    marginTop: normalise(8),
+    borderWidth: 1,
+    borderColor: '#6366F130',
+    borderStyle: 'dashed',
+  },
+  upiAddText: { fontSize: normalise(11), color: '#6366F1', fontWeight: '600' },
 
   // Section
-  section: {
-    marginBottom: normalise(16),
-  },
+  section: { marginBottom: normalise(16) },
   sectionLabel: {
     fontSize: normalise(12),
     fontWeight: '700',
@@ -555,6 +604,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
   },
+  fieldCardUpi: { borderWidth: 1.5, borderColor: '#6366F115' },
   fieldIcon: {
     width: 40,
     height: 40,
@@ -564,9 +614,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: normalise(12),
   },
-  fieldContent: {
-    flex: 1,
-  },
+  fieldContent: { flex: 1 },
   fieldLabel: {
     fontSize: normalise(10),
     color: '#9CA3AF',
@@ -575,11 +623,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 3,
   },
-  fieldValue: {
-    fontSize: normalise(14),
-    color: '#1F2937',
-    fontWeight: '600',
-  },
+  fieldValue: { fontSize: normalise(14), color: '#1F2937', fontWeight: '600' },
   fieldInput: {
     fontSize: normalise(14),
     color: '#1F2937',
@@ -588,6 +632,31 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5,
     borderBottomColor: '#E8453C',
     paddingBottom: 2,
+  },
+
+  // UPI verified badge
+  upiVerifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  upiVerifiedText: {
+    fontSize: normalise(11),
+    color: '#34D399',
+    fontWeight: '700',
+  },
+
+  // UPI hint
+  upiHint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 10,
+    padding: normalise(10),
+    marginTop: normalise(4),
+  },
+  upiHintText: {
+    flex: 1,
+    fontSize: normalise(11),
+    color: '#6366F1',
+    lineHeight: normalise(16),
   },
 
   // Activity Card
@@ -607,9 +676,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: normalise(6),
   },
-  activityText: {
-    flex: 1,
-  },
+  activityText: { flex: 1 },
   activityLabel: {
     fontSize: normalise(11),
     color: '#9CA3AF',

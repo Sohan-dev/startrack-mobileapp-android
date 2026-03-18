@@ -1,16 +1,11 @@
-import { put, call, takeLatest, take } from 'redux-saga/effects';
-import EncryptedStorage from 'react-native-encrypted-storage';
-import constants from '../Utils/constants';
-import { AUTH, TOKEN, PROFILE, POLICY } from '../redux/store/TypeConstants';
+import { put, call, takeLatest } from 'redux-saga/effects';
+import { PROFILE } from '../redux/store/TypeConstants';
 import {
   POST_SET,
   GET,
   GET_SET,
   POST,
   getToken,
-  json_data,
-  form_data,
-  PUT_SET,
   POST_FORM,
 } from './setup/method';
 

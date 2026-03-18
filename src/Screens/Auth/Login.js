@@ -30,59 +30,6 @@ export default function Login(props) {
   const dispatch = useDispatch();
   const isDarkMode = useColorScheme() === 'dark';
 
-  // async function retrieveUserSession() {
-  //   try {
-  //     const session = await EncryptedStorage.getItem(constants.USER_SESSION);
-
-  //     if (session !== undefined) {
-  //       // Congrats! You've just retrieved your first value!
-  //       console.log(JSON.parse(session));
-  //       let userData = JSON.parse(session);
-  //       setEmail(userData.email);
-  //       setPassword(userData.password);
-  //       setRememberMe(true);
-  //     }
-  //   } catch (error) {
-  //     // There was an error on the native side
-  //   }
-  // }
-
-  // async function removeUserSession() {
-  //   try {
-  //     await EncryptedStorage.removeItem(constants.USER_SESSION);
-  //     // Congrats! You've just removed your first value!
-  //     console.log('removed your first value!');
-  //   } catch (error) {
-  //     console.log(error);
-  //     // There was an error on the native side
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   retrieveUserSession();
-  // }, []);
-
-  // const requestlocPermission = async () => {
-  //   try {
-  //     const granted = await PermissionsAndroid.request(
-  //       PermissionsAndroid.PERMISSIONS,
-  //       {
-  //         title: 'UIG Storage Permission',
-  //         message: 'UIG needs to access your storage',
-  //         buttonPositive: 'OK',
-  //       },
-  //     );
-
-  //     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-  //       console.log('location permission accepted');
-  //     } else {
-  //       console.log('location permission denied');
-  //     }
-  //   } catch (err) {
-  //     console.warn(err);
-  //   }
-  // };
-
   const saveLoginResp = data => {
     if (data) {
       dispatch(getSignIn(data?._user));

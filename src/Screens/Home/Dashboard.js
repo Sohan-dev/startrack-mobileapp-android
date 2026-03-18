@@ -279,9 +279,7 @@ export default function Dashboard(props) {
       const doc = await firestore().collection('users').doc(uid).get();
       if (doc.exists) {
         const data = doc.data();
-        // dispatch(getHomeData(data));
         setUserData(data);
-        // fetchExpenseCounts(uid, data.role);
       }
     } catch (error) {
       console.log('Error fetching user:', error);

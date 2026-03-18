@@ -21,10 +21,7 @@ import LottieView from 'lottie-react-native';
 import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  sendNotificationToApprover,
-  sendNotificationToSelf,
-} from '../../Utils/sendNotification';
+import { sendNotificationToApprover } from '../../Utils/sendNotification';
 import { trackExpenseSubmit } from '../../Utils/useAnalytics';
 
 // ── Expense Types ─────────────────────────────────────────────────────────
@@ -50,10 +47,10 @@ const APPROVERS = [
     name: 'Manoj Dasgupta',
     email: 'manoj@startrackautomation.in',
   },
-  {
-    name: 'Shubhankar(Developer)',
-    email: 'shubhankarkoner.sta@gmail.com',
-  },
+  // {
+  //   name: 'Shubhankar(Developer)',
+  //   email: 'shubhankarkoner.sta@gmail.com',
+  // },
 ];
 
 // ── Type Selector Modal ───────────────────────────────────────────────────
@@ -268,74 +265,6 @@ export default function AddExpenseScreen(props) {
       console.log('Error:', error);
     }
   };
-
-  // const fetchAdvanceBalance = async () => {
-  //   try {
-  //     const uid = auth().currentUser?.uid;
-  //     const snap = await firestore()
-  //       .collection('users')
-  //       .doc(uid)
-  //       .collection('advances')
-  //       .get();
-
-  //     console.log('Total docs:', snap.size);
-
-  //     let totalBalance = 0;
-  //     const ids = [];
-
-  //     snap.forEach(doc => {
-  //       const d = doc.data();
-  //       if (d.status !== 'Approved') return;
-
-  //       const paid = parseFloat(d.paidAmount ?? 0);
-  //       const usedAlready = parseFloat(d.usedInExpense ?? 0);
-  //       const available = paid - usedAlready;
-
-  //       if (available > 0) {
-  //         totalBalance += available;
-  //         ids.push(doc.id);
-  //       }
-  //     });
-
-  //     console.log('TOTAL balance', totalBalance);
-  //     setAdvanceBalance(totalBalance);
-  //     setAdvanceIds(ids);
-  //   } catch (error) {
-  //     console.log('Error:', error);
-  //   }
-  // };
-
-  // const fetchAdvanceBalance = async () => {
-  //   try {
-  //     const uid = auth().currentUser?.uid;
-  //     const snap = await firestore()
-  //       .collection('users')
-  //       .doc(uid)
-  //       .collection('advances')
-  //       .where('status', '==', 'Approved')
-  //       .get();
-
-  //     console.log(snap.docs);
-
-  //     let totalBalance = 0;
-  //     const ids = [];
-  //     snap.docs.forEach(doc => {
-  //       const d = doc.data();
-  //       const approved = d.approvedAmount ?? d.requestedAmount ?? 0;
-  //       const paid = d.paidAmount || 0;
-  //       const remaining = approved - paid;
-  //       if (remaining > 0) {
-  //         totalBalance += remaining;
-  //         ids.push(doc.id);
-  //       }
-  //     });
-  //     console.log(totalBalance, 'TOTAL balance');
-  //     setAdvanceBalance(totalBalance);
-  //     setAdvanceIds(ids);
-  //   } catch (error) {
-  //     console.log('Advance balance fetch error:', error);
-  //   }
-  // };
 
   const addEntry = () => {
     setEntries(prev => [

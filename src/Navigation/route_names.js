@@ -30,6 +30,7 @@ module.exports = {
     app_grid_add_expense_screen:
       'DASHBOARD_NAVIGATION_app_grid_add_expense_screen',
     app_grid_my_expence: 'DASHBOARD_NAVIGATION_app_grid_my_expence',
+    app_grid_employee_list: 'DASHBOARD_NAVIGATION_app_grid_employee_list',
   },
   ADVANCE_PAY_NAVIGATION: {
     proceed_to_req_advance_pay: 'DEVICE_AUTH_proceed_to_req_advance_pay',

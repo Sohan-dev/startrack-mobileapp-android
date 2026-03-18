@@ -25,6 +25,7 @@ import {
   sendNotificationToApprover,
   sendNotificationToSelf,
 } from '../../Utils/sendNotification';
+import { trackExpenseSubmit } from '../../Utils/useAnalytics';
 
 // ── Expense Types ─────────────────────────────────────────────────────────
 const EXPENSE_TYPES = [
@@ -239,8 +240,6 @@ export default function AddExpenseScreen(props) {
         .collection('advances')
         .get();
 
-      console.log('Total docs:', snap.size);
-
       let totalBalance = 0;
       const ids = [];
 
@@ -252,19 +251,59 @@ export default function AddExpenseScreen(props) {
         const usedAlready = parseFloat(d.usedInExpense ?? 0);
         const available = paid - usedAlready;
 
+        console.log(
+          `Advance ${doc.id}: paid=${paid} used=${usedAlready} available=${available}`,
+        );
+
         if (available > 0) {
           totalBalance += available;
-          ids.push(doc.id);
+          ids.push({ id: doc.id, available }); // ✅ store object not just id
         }
       });
 
-      console.log('TOTAL balance', totalBalance);
+      console.log('Total available balance:', totalBalance);
       setAdvanceBalance(totalBalance);
-      setAdvanceIds(ids);
+      setAdvanceIds(ids); // ✅ now [{id, available}]
     } catch (error) {
       console.log('Error:', error);
     }
   };
+
+  // const fetchAdvanceBalance = async () => {
+  //   try {
+  //     const uid = auth().currentUser?.uid;
+  //     const snap = await firestore()
+  //       .collection('users')
+  //       .doc(uid)
+  //       .collection('advances')
+  //       .get();
+
+  //     console.log('Total docs:', snap.size);
+
+  //     let totalBalance = 0;
+  //     const ids = [];
+
+  //     snap.forEach(doc => {
+  //       const d = doc.data();
+  //       if (d.status !== 'Approved') return;
+
+  //       const paid = parseFloat(d.paidAmount ?? 0);
+  //       const usedAlready = parseFloat(d.usedInExpense ?? 0);
+  //       const available = paid - usedAlready;
+
+  //       if (available > 0) {
+  //         totalBalance += available;
+  //         ids.push(doc.id);
+  //       }
+  //     });
+
+  //     console.log('TOTAL balance', totalBalance);
+  //     setAdvanceBalance(totalBalance);
+  //     setAdvanceIds(ids);
+  //   } catch (error) {
+  //     console.log('Error:', error);
+  //   }
+  // };
 
   // const fetchAdvanceBalance = async () => {
   //   try {
@@ -354,11 +393,46 @@ export default function AddExpenseScreen(props) {
           totalAmount: totalAmount,
           advanceDeducted: advanceDeducted,
           netPayable: netPayable,
-          advanceIds: advanceIds,
+          advanceIds: advanceIds.map(a => a.id),
           createdAt: Date.now(),
           status: 'Pending',
           userId: user.uid,
         });
+      await trackExpenseSubmit(totalAmount);
+      if (advanceDeducted > 0 && advanceIds.length > 0) {
+        let remainingToDeduct = advanceDeducted;
+
+        for (const advance of advanceIds) {
+          if (remainingToDeduct <= 0) break;
+
+          const deductThis = Math.min(advance.available, remainingToDeduct);
+          remainingToDeduct -= deductThis;
+
+          const advDoc = await firestore()
+            .collection('users')
+            .doc(user.uid)
+            .collection('advances')
+            .doc(advance.id)
+            .get();
+
+          const currentUsed = parseFloat(advDoc.data()?.usedInExpense ?? 0);
+
+          await firestore()
+            .collection('users')
+            .doc(user.uid)
+            .collection('advances')
+            .doc(advance.id)
+            .update({
+              usedInExpense: currentUsed + deductThis,
+            });
+
+          console.log(
+            `✅ Advance ${advance.id}: usedInExpense updated to ${
+              currentUsed + deductThis
+            }`,
+          );
+        }
+      }
 
       await sendNotificationToApprover(
         approver?.email,
@@ -863,9 +937,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEF2FF',
     borderRadius: 14,
     padding: normalise(14),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginTop: normalise(20),
     borderWidth: 1.5,
     borderColor: '#6366F120',
@@ -874,22 +945,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    flex: 1,
+    marginBottom: normalise(8),
   },
   advanceBannerTitle: {
-    fontSize: normalise(13),
+    fontSize: normalise(11),
     fontWeight: '700',
     color: '#6366F1',
   },
   advanceBannerSub: {
-    fontSize: normalise(11),
+    fontSize: normalise(10),
     color: '#9CA3AF',
     marginTop: 2,
   },
   advanceBannerAmount: {
-    fontSize: normalise(16),
+    fontSize: normalise(15),
     fontWeight: '800',
     color: '#6366F1',
+    textAlign: 'right',
   },
 
   // Net Payable Banner

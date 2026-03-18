@@ -21,6 +21,7 @@ import AllExpensesScreen from '../Screens/Approver/AllExpensesScreen';
 import RequestAdvanceScreen from '../Screens/AdvancePay/RequestAdvanceScreen';
 import MyAdvancesScreen from '../Screens/AdvancePay/MyAdvancesScreen';
 import PendingAdvancesScreen from '../Screens/AdvancePay/PendingAdvancesScreen';
+import EmployeeListScreen from '../Screens/Home/EmployeeListScreen';
 // import AdvancePaymentScreen from '../Screens/AdvancePay/AdvancePaymentScreen';
 
 const Stack = createStackNavigator();
@@ -91,11 +92,11 @@ export default function StackNavigator() {
           component={PendingAdvancesScreen}
           options={{ headerShown: false }}
         />
-        {/* <Stack.Screen
-          name={ADVANCE_PAY_NAVIGATION.proceed_to_pay_advance}
-          component={AdvancePaymentScreen}
+        <Stack.Screen
+          name={DASHBOARD_NAVIGATION.app_grid_employee_list}
+          component={EmployeeListScreen}
           options={{ headerShown: false }}
-        /> */}
+        />
       </Stack.Navigator>
     );
   }

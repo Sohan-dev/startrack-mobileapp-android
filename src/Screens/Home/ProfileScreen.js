@@ -43,19 +43,14 @@ const FIELDS = [
     icon: 'phone-outline',
     keyboard: 'phone-pad',
   },
-  // ✅ Only show UPI ID for employees
-  ...(!isApprover
-    ? [
-        {
-          key: 'upiId',
-          label: 'UPI ID',
-          icon: 'contactless-payment',
-          keyboard: 'email-address',
-          placeholder: 'yourname@upi',
-          color: '#6366F1',
-        },
-      ]
-    : []),
+  {
+    key: 'upiId',
+    label: 'UPI ID',
+    icon: 'contactless-payment',
+    keyboard: 'email-address',
+    placeholder: 'yourname@upi',
+    color: '#6366F1',
+  },
 ];
 
 export default function ProfileScreen(props) {
@@ -267,7 +262,7 @@ export default function ProfileScreen(props) {
           </View>
 
           {/* ✅ UPI ID quick display badge */}
-          {userData.upiId ? (
+          {isApprover && userData.upiId ? (
             <View style={styles.upiBadge}>
               <Icon name="contactless-payment" size={13} color="#6366F1" />
               <Text style={styles.upiText}>{userData.upiId}</Text>

@@ -9,13 +9,12 @@ export const openUpiPayment = async ({
   onSuccess,
   onFailure,
 }) => {
-
   // ✅ Check if UPI ID exists
   if (!upiId || upiId.trim() === '') {
     Alert.alert(
       '❌ UPI ID Missing',
       `${name} has not added their UPI ID yet.\n\nAsk them to add it in their Profile → UPI ID.`,
-      [{ text: 'OK' }]
+      [{ text: 'OK' }],
     );
     onFailure && onFailure('no_upi_id');
     return;
@@ -30,36 +29,48 @@ export const openUpiPayment = async ({
   }
 
   // ✅ Build UPI deep link
-  const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId.trim())}&pn=${encodeURIComponent(name)}&am=${parsedAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
+  const upiUrl = `upi://pay?pa=${encodeURIComponent(
+    upiId.trim(),
+  )}&pn=${encodeURIComponent(name)}&am=${parsedAmount.toFixed(
+    2,
+  )}&cu=INR&tn=${encodeURIComponent(note)}`;
 
   console.log('UPI URL:', upiUrl);
 
   try {
     const supported = await Linking.canOpenURL(upiUrl);
+    console.log(supported, 'SUPPORT');
 
-    if (supported) {
-      // ✅ Open UPI app
-      await Linking.openURL(upiUrl);
-      onSuccess && onSuccess();
-    } else {
-      // ✅ No UPI app found — show install options
-      Alert.alert(
-        'No UPI App Found',
-        'Please install Google Pay, PhonePe or Paytm to make UPI payments.',
-        [
-          {
-            text: 'Install Google Pay',
-            onPress: () => Linking.openURL('https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user'),
-          },
-          {
-            text: 'Install PhonePe',
-            onPress: () => Linking.openURL('https://play.google.com/store/apps/details?id=com.phonepe.app'),
-          },
-          { text: 'Cancel', style: 'cancel' },
-        ]
-      );
-      onFailure && onFailure('no_app');
-    }
+    // if (supported) {
+    // ✅ Open UPI app
+    await Linking.openURL(upiUrl);
+    onSuccess && onSuccess();
+    // }
+    // else {
+    //   // ✅ No UPI app found — show install options
+    //   Alert.alert(
+    //     'No UPI App Found',
+    //     'Please install Google Pay, PhonePe or Paytm to make UPI payments.',
+    //     [
+    //       {
+    //         text: 'Install Google Pay',
+    //         onPress: () =>
+    //           Linking.openURL(
+    //             'https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user',
+    //           ),
+    //       },
+    //       {
+    //         text: 'Install PhonePe',
+    //         onPress: () =>
+    //           Linking.openURL(
+    //             'https://play.google.com/store/apps/details?id=com.phonepe.app',
+    //           ),
+    //       },
+    //       { text: 'Cancel', style: 'cancel' },
+    //     ],
+    //   );
+    //   onFailure && onFailure('no_app');
+    // }
   } catch (error) {
     console.log('UPI error:', error);
     Alert.alert('UPI Error', 'Something went wrong while opening UPI app.');
@@ -77,7 +88,9 @@ export const showPaymentConfirmation = ({
 }) => {
   Alert.alert(
     '💰 Confirm Payment',
-    `Did you successfully pay ₹${parseFloat(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })} to ${name} via ${paymentMethod}?`,
+    `Did you successfully pay ₹${parseFloat(amount).toLocaleString('en-IN', {
+      maximumFractionDigits: 2,
+    })} to ${name} via ${paymentMethod}?`,
     [
       {
         text: 'No, Cancel',
@@ -88,7 +101,7 @@ export const showPaymentConfirmation = ({
         text: '✅ Yes, Done',
         onPress: () => onConfirm && onConfirm(),
       },
-    ]
+    ],
   );
 };
 
@@ -122,7 +135,7 @@ export const openUpiAndConfirm = ({
         });
       }, 1000); // small delay so UPI app opens first
     },
-    onFailure: (reason) => {
+    onFailure: reason => {
       if (reason === 'no_upi_id') return; // already alerted
 
       // ✅ UPI failed — ask if paid manually
@@ -135,7 +148,7 @@ export const openUpiAndConfirm = ({
             text: 'Yes, Paid',
             onPress: () => onConfirm && onConfirm(),
           },
-        ]
+        ],
       );
     },
   });

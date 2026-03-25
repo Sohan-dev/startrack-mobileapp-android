@@ -25,7 +25,7 @@ const APPROVERS = [
   { name: 'Amit Das', email: 'amit@startrackautomation.in' },
   { name: 'Aparesh Mondal', email: 'aparesh@startrackautomation.in' },
   { name: 'Manoj Dasgupta', email: 'manoj@startrackautomation.in' },
-  // { name: 'Shubhankar(Developer)', email: 'shubhankarkoner.sta@gmail.com' },
+  { name: 'Shubhankar(Developer)', email: 'shubhankarkoner.sta@gmail.com' },
   // {
   //   name: 'Amit Mondal(Tester)',
   //   email: 'amitmondal.sta@gmail.com',

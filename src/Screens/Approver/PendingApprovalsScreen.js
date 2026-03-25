@@ -185,28 +185,34 @@ function PendingCard({ item, index, onApprove, onReject }) {
 
         {/* Description */}
         {item.description ? (
-          <Text style={styles.description} numberOfLines={1}>
-            📝 {item.description}
-          </Text>
+          <Text style={styles.description}>📝 {item.description}</Text>
         ) : null}
 
         {/* Expanded entries */}
         {expanded && item.entries?.length > 0 && (
           <View style={styles.entriesExpanded}>
             {item.entries.map((entry, idx) => (
-              <View key={idx} style={styles.entryItem}>
-                <View
-                  style={[
-                    styles.entryDot,
-                    { backgroundColor: entry.type?.color || '#9CA3AF' },
-                  ]}
-                />
-                <Text style={styles.entryType}>
-                  {entry.type?.label || 'N/A'}
-                </Text>
-                <Text style={styles.entryAmount}>
-                  ₹{formatAmount(entry.amount)}
-                </Text>
+              <View key={idx} style={styles.entryItemWrapper}>
+                <View style={styles.entryItem}>
+                  <View
+                    style={[
+                      styles.entryDot,
+                      { backgroundColor: entry.type?.color || '#9CA3AF' },
+                    ]}
+                  />
+                  <Text style={styles.entryType}>
+                    {entry.type?.label || 'N/A'}
+                  </Text>
+                  <Text style={styles.entryAmount}>
+                    ₹{formatAmount(entry.amount)}
+                  </Text>
+                </View>
+
+                {entry.description ? (
+                  <Text style={styles.entryDescription} numberOfLines={1}>
+                    {entry.description}
+                  </Text>
+                ) : null}
               </View>
             ))}
           </View>

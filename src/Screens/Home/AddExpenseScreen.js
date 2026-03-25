@@ -47,10 +47,10 @@ const APPROVERS = [
     name: 'Manoj Dasgupta',
     email: 'manoj@startrackautomation.in',
   },
-  // {
-  //   name: 'Shubhankar(Developer)',
-  //   email: 'shubhankarkoner.sta@gmail.com',
-  // },
+  {
+    name: 'Shubhankar(Developer)',
+    email: 'shubhankarkoner.sta@gmail.com',
+  },
 ];
 
 // ── Type Selector Modal ───────────────────────────────────────────────────
@@ -148,54 +148,62 @@ const EntryRow = ({ entry, onChange, onRemove, showRemove, index }) => {
   const typeColor = entry.type?.color || '#9CA3AF';
 
   return (
-    <View style={styles.entryRow}>
-      <View style={styles.entryIndex}>
-        <Text style={styles.entryIndexText}>{index + 1}</Text>
-      </View>
+    <View style={styles.entryWrapper}>
+      {/* Existing top row — type + amount + remove */}
+      <View style={styles.entryRow}>
+        <View style={styles.entryIndex}>
+          <Text style={styles.entryIndexText}>{index + 1}</Text>
+        </View>
 
-      <TouchableOpacity
-        style={[
-          styles.entryTypeBtn,
-          entry.type && {
-            borderColor: typeColor,
-            backgroundColor: typeColor + '10',
-          },
-        ]}
-        onPress={() => setShowTypeModal(true)}
-      >
-        {entry.type ? (
-          <>
-            <Icon name={entry.type.icon} size={15} color={typeColor} />
-            <Text style={[styles.entryTypeText, { color: typeColor }]}>
-              {entry.type.label}
-            </Text>
-          </>
-        ) : (
-          <Text style={styles.entryTypePlaceholder}>Type ▾</Text>
-        )}
-      </TouchableOpacity>
-
-      <View style={styles.entryAmountWrap}>
-        <Text style={styles.rupeeSign}>₹</Text>
-        <TextInput
-          style={styles.entryAmountInput}
-          placeholder="0.00"
-          placeholderTextColor="#C4C4C4"
-          keyboardType="decimal-pad"
-          value={entry.amount}
-          onChangeText={val => onChange('amount', val)}
-        />
-      </View>
-
-      {/* <TouchableOpacity style={styles.cameraBtn}>
-        <Icon name="camera-outline" size={18} color="#9CA3AF" />
-      </TouchableOpacity> */}
-
-      {showRemove && (
-        <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
-          <Icon name="close-circle" size={20} color="#FCA5A5" />
+        <TouchableOpacity
+          style={[
+            styles.entryTypeBtn,
+            entry.type && {
+              borderColor: typeColor,
+              backgroundColor: typeColor + '10',
+            },
+          ]}
+          onPress={() => setShowTypeModal(true)}
+        >
+          {entry.type ? (
+            <>
+              <Icon name={entry.type.icon} size={15} color={typeColor} />
+              <Text style={[styles.entryTypeText, { color: typeColor }]}>
+                {entry.type.label}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.entryTypePlaceholder}>Type ▾</Text>
+          )}
         </TouchableOpacity>
-      )}
+
+        <View style={styles.entryAmountWrap}>
+          <Text style={styles.rupeeSign}>₹</Text>
+          <TextInput
+            style={styles.entryAmountInput}
+            placeholder="0.00"
+            placeholderTextColor="#C4C4C4"
+            keyboardType="decimal-pad"
+            value={entry.amount}
+            onChangeText={val => onChange('amount', val)}
+          />
+        </View>
+
+        {showRemove && (
+          <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
+            <Icon name="close-circle" size={20} color="#FCA5A5" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* ✅ Description input below */}
+      <TextInput
+        style={styles.entryDescInput}
+        placeholder="Add description..."
+        placeholderTextColor="#C4C4C4"
+        value={entry.description || ''}
+        onChangeText={val => onChange('description', val)}
+      />
 
       <TypeModal
         visible={showTypeModal}
@@ -711,6 +719,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: normalise(12),
+  },
+  entryWrapper: {
+    marginBottom: normalise(10),
+  },
+  entryDescInput: {
+    marginLeft: normalise(29), // aligns with type/amount (skips index circle)
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: normalise(10),
+    paddingVertical: normalise(6),
+    fontSize: normalise(12),
+    color: '#6B7280',
+    marginTop: normalise(4),
+  },
+  entryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // marginBottom: 0, // ✅ changed from normalise(10) to 0
+    gap: 8,
   },
   dateTextWrap: { flex: 1 },
   dateLabelSmall: {

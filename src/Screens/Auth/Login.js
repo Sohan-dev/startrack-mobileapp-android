@@ -58,9 +58,7 @@ export default function Login(props) {
         />
         <View
           style={{
-            // width: normalise(150),
             marginTop: normalise(100),
-            // backgroundColor: 'tomato',
             justifyContent: 'center',
             alignItems: 'center',
           }}

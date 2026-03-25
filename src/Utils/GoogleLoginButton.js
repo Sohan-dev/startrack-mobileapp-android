@@ -8,6 +8,7 @@ import {
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import showErrorAlert from './Toast';
+import { setUserTracking, trackLogin } from './useAnalytics';
 
 // ── Approver emails ───────────────────────────────────────────────────────
 // Users with these emails will automatically get 'approver' role
@@ -53,7 +54,9 @@ const GoogleLoginButton = props => {
           },
           { merge: true },
         );
+      // await setUserTracking()
       // showErrorAlert("Fi")
+
       console.log('User saved ✅ Role:', role);
       onSuccess(user);
     } catch (error) {

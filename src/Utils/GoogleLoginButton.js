@@ -32,62 +32,11 @@ const GoogleLoginButton = props => {
     });
   }, []);
 
-  const saveUserToFirestore = async user => {
-    try {
-      const role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
-        ? 'approver'
-        : 'employee';
-
-      await firestore()
-        .collection('users')
-        .doc(user.uid)
-        .set(
-          {
-            uid: user.uid,
-            displayName: user.displayName || '',
-            email: user.email || '',
-            photoURL: user.photoURL || '',
-            phoneNumber: user.phoneNumber || '',
-            lastLogin: user?.metadata?.lastSignInTime,
-            createdAt: user?.metadata?.creationTime,
-            role: role,
-          },
-          { merge: true },
-        );
-      // await setUserTracking()
-      // showErrorAlert("Fi")
-
-      console.log('User saved ✅ Role:', role);
-      onSuccess(user);
-    } catch (error) {
-      console.log('Firestore save error:', error);
-    }
-  };
-
   // const saveUserToFirestore = async user => {
   //   try {
-  //     const existingUser = await firestore()
-  //       .collection('users')
-  //       .doc(user.uid)
-  //       .get();
-
-  //     console.log('User email from Google:', JSON.stringify(user.email));
-  //     console.log('APPROVER_EMAILS list:', JSON.stringify(APPROVER_EMAILS));
-  //     console.log(
-  //       'Email match:',
-  //       APPROVER_EMAILS.includes(user.email?.toLowerCase()),
-  //     );
-
-  //     let role = 'employee';
-  //     if (existingUser.exists) {
-  //       // Keep existing role — never overwrite
-  //       role = existingUser.data()?.role || 'employee';
-  //     } else {
-  //       // New user — assign role by email
-  //       role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
-  //         ? 'approver'
-  //         : 'employee';
-  //     }
+  //     const role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
+  //       ? 'approver'
+  //       : 'employee';
 
   //     await firestore()
   //       .collection('users')
@@ -101,18 +50,59 @@ const GoogleLoginButton = props => {
   //           phoneNumber: user.phoneNumber || '',
   //           lastLogin: user?.metadata?.lastSignInTime,
   //           createdAt: user?.metadata?.creationTime,
-  //           role: role, // ✅ role saved here
+  //           role: role,
   //         },
   //         { merge: true },
   //       );
+  //     await setUserTracking();
+  //     // showErrorAlert("Fi")
 
-  //     console.log(`User saved ✅ Role: ${role}`);
+  //     console.log('User saved ✅ Role:', role);
   //     onSuccess(user);
   //   } catch (error) {
   //     console.log('Firestore save error:', error);
   //   }
   // };
 
+  const saveUserToFirestore = async user => {
+    try {
+      const userRef = firestore().collection('users').doc(user.uid);
+      const doc = await userRef.get();
+
+      const role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
+        ? 'approver'
+        : 'employee';
+
+      if (!doc.exists) {
+        // ✅ FIRST TIME → create user
+        await userRef.set({
+          uid: user.uid,
+          displayName: user.displayName || '',
+          email: user.email || '',
+          photoURL: user.photoURL || '',
+          phoneNumber: user.phoneNumber || '', // safe here
+          createdAt: user?.metadata?.creationTime,
+          role: role,
+          lastLogin: user?.metadata?.lastSignInTime,
+        });
+
+        console.log('User created ✅');
+      } else {
+        // ✅ EXISTING USER → only update minimal fields
+        console.log('User updated ✅');
+        await userRef.update({
+          lastLogin: user?.metadata?.lastSignInTime,
+        });
+
+        console.log('User already exists ✅ (updated lastLogin only)');
+      }
+
+      await setUserTracking();
+      onSuccess(user);
+    } catch (error) {
+      console.log('Firestore save error:', error);
+    }
+  };
   const signIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
@@ -133,6 +123,8 @@ const GoogleLoginButton = props => {
       const userCredential = await auth().signInWithCredential(
         googleCredential,
       );
+
+      console.log(userCredential, 'GOOGLE cred');
 
       showErrorAlert('Login Successful');
 

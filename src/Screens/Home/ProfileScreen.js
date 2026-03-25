@@ -1,5 +1,4 @@
 /* eslint-disable react-native/no-inline-styles */
-
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
@@ -22,6 +21,10 @@ import MyStatusBar from '../../Utils/StatusBar';
 import { useDispatch } from 'react-redux';
 import { getLogout } from '../../redux/action/AuthAction';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import showErrorAlert from '../../Utils/Toast';
+import { launchImageLibrary } from 'react-native-image-picker';
+import storage from '@react-native-firebase/storage';
+import moment from 'moment';
 
 const FIELDS = [
   {
@@ -86,6 +89,7 @@ export default function ProfileScreen(props) {
       const uid = auth().currentUser?.uid;
       const doc = await firestore().collection('users').doc(uid).get();
       if (doc.exists) {
+        console.log(doc.data(), 'DOC Dtata');
         setUserData(doc.data());
         setEditData(doc.data());
       }
@@ -99,6 +103,7 @@ export default function ProfileScreen(props) {
   const isApprover = userData?.role === 'approver';
 
   const handleSave = async () => {
+    console.log(editData.phoneNumber);
     try {
       setSaving(true);
       const uid = auth().currentUser?.uid;
@@ -118,7 +123,8 @@ export default function ProfileScreen(props) {
 
       setUserData(prev => ({ ...prev, ...editData }));
       setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      // Alert.alert('Success', 'Profile updated successfully!');
+      showErrorAlert('Profile updated successfully!');
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile');
       console.log('Save error:', error);
@@ -159,16 +165,79 @@ export default function ProfileScreen(props) {
     );
   };
 
-  const formatDate = dateStr => {
-    if (!dateStr) return 'N/A';
+  const pickImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.7,
+    });
+
+    if (result.didCancel) return;
+
+    const asset = result.assets[0];
+    return asset.uri;
+  };
+
+  const uploadImage = async (uri, userId) => {
+    const filename = `profile_${userData?.displayName}_${moment(
+      Date.now(),
+    ).format('MMMM Do YYYY, h:mm:ss a')}.jpg`;
+    const reference = storage().ref(`profileImages/${filename}`);
+
+    await reference.putFile(uri);
+
+    const downloadURL = await reference.getDownloadURL();
+    return downloadURL;
+  };
+
+  const updateUserProfile = async (userId, imageUrl) => {
+    await firestore().collection('users').doc(userId).update({
+      photoURL: imageUrl,
+    });
+  };
+
+  // const deleteOldImage = async path => {
+  //   if (!path) return;
+
+  //   try {
+  //     await storage().ref(path).delete();
+  //   } catch (error) {
+  //     console.log('Delete failed:', error);
+  //   }
+  // };
+
+  const deleteOldProfilePic = async oldImageFullUri => {
+    const path = `profileImages/${oldImageFullUri}`;
+    console.log(path, 'delete path');
     try {
-      return new Date(dateStr).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch {
-      return 'N/A';
+      await storage().ref(path).delete();
+      // Create a reference to the file to delete
+      // const imageRef = storage().refFromURL(path);
+
+      // Delete the file
+      // await imageRef.delete();
+
+      console.log('Old profile picture deleted successfully!');
+    } catch (error) {
+      // Handle cases where the file might not exist
+      console.error('Error deleting old image: ', error);
+    }
+  };
+
+  const handleUpdateProfilePic = async () => {
+    try {
+      // await deleteOldProfilePic(userData?.photoURL);
+      const imageUri = await pickImage();
+      if (!imageUri) return;
+
+      const url = await uploadImage(imageUri, userData?.uid);
+
+      await updateUserProfile(userData?.uid, url);
+      setUserData(prev => ({
+        ...prev,
+        photoURL: url,
+      }));
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -244,6 +313,7 @@ export default function ProfileScreen(props) {
             <TouchableOpacity
               style={styles.cameraBtn}
               disabled={uploadingPhoto}
+              onPress={() => handleUpdateProfilePic()}
             >
               <Icon name="camera" size={16} color="#fff" />
             </TouchableOpacity>
@@ -257,11 +327,11 @@ export default function ProfileScreen(props) {
           <View style={styles.memberBadge}>
             <Icon name="shield-check-outline" size={13} color="#E8453C" />
             <Text style={styles.memberText}>
-              Member since {formatDate(userData.createdAt)}
+              Member since {moment(userData.createdAt).format('LL')}
             </Text>
           </View>
 
-          {/* ✅ UPI ID quick display badge */}
+          {/* UPI ID quick display badge */}
           {isApprover && userData.upiId ? (
             <View style={styles.upiBadge}>
               <Icon name="contactless-payment" size={13} color="#6366F1" />
@@ -387,7 +457,7 @@ export default function ProfileScreen(props) {
               <View style={styles.activityText}>
                 <Text style={styles.activityLabel}>Last Login</Text>
                 <Text style={styles.activityValue}>
-                  {formatDate(userData.lastLogin)}
+                  {moment(userData.lastLogin).format('MMMM Do YYYY, h:mm A')}
                 </Text>
               </View>
             </View>
@@ -397,7 +467,7 @@ export default function ProfileScreen(props) {
               <View style={styles.activityText}>
                 <Text style={styles.activityLabel}>Account Created</Text>
                 <Text style={styles.activityValue}>
-                  {formatDate(userData.createdAt)}
+                  {moment(userData.createdAt).format('MMMM Do YYYY, h:mm A')}
                 </Text>
               </View>
             </View>

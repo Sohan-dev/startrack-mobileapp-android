@@ -6,8 +6,6 @@ import { GET, POST, getToken } from './setup/method';
 
 function* getSignin(action) {
   try {
-    console.log(action.payload, '....login resp');
-    // let response = yield call(POST, 'client-login', action.payload, '');
     yield put({
       type: AUTH.LOGIN_SUCCESS.type,
       data: {

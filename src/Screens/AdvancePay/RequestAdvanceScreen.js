@@ -26,6 +26,10 @@ const APPROVERS = [
   { name: 'Aparesh Mondal', email: 'aparesh@startrackautomation.in' },
   { name: 'Manoj Dasgupta', email: 'manoj@startrackautomation.in' },
   // { name: 'Shubhankar(Developer)', email: 'shubhankarkoner.sta@gmail.com' },
+  // {
+  //   name: 'Amit Mondal(Tester)',
+  //   email: 'amitmondal.sta@gmail.com',
+  // },
 ];
 
 const ADVANCE_REASONS = [

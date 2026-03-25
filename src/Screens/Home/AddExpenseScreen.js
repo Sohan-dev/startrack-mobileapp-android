@@ -47,10 +47,14 @@ const APPROVERS = [
     name: 'Manoj Dasgupta',
     email: 'manoj@startrackautomation.in',
   },
-  {
-    name: 'Shubhankar(Developer)',
-    email: 'shubhankarkoner.sta@gmail.com',
-  },
+  // {
+  //   name: 'Shubhankar(Developer)',
+  //   email: 'shubhankarkoner.sta@gmail.com',
+  // },
+  // {
+  //   name: 'Amit Mondal(Tester)',
+  //   email: 'amitmondal.sta@gmail.com',
+  // },
 ];
 
 // ── Type Selector Modal ───────────────────────────────────────────────────
@@ -1087,10 +1091,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   approverAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E5E7EB',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E8453C',
     justifyContent: 'center',
     alignItems: 'center',
   },

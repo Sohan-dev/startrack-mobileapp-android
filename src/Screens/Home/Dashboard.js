@@ -360,7 +360,14 @@ export default function Dashboard(props) {
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerBtn}>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() =>
+              props.navigation.navigate(
+                DASHBOARD_NAVIGATION.app_notification_list,
+              )
+            }
+          >
             <Icon name="bell-outline" size={22} color="#fff" />
             <View style={styles.notifDot} />
           </TouchableOpacity>

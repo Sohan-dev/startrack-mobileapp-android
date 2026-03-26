@@ -89,7 +89,6 @@ export default function ProfileScreen(props) {
       const uid = auth().currentUser?.uid;
       const doc = await firestore().collection('users').doc(uid).get();
       if (doc.exists) {
-        console.log(doc.data(), 'DOC Dtata');
         setUserData(doc.data());
         setEditData(doc.data());
       }
@@ -103,7 +102,6 @@ export default function ProfileScreen(props) {
   const isApprover = userData?.role === 'approver';
 
   const handleSave = async () => {
-    console.log(editData.phoneNumber);
     try {
       setSaving(true);
       const uid = auth().currentUser?.uid;

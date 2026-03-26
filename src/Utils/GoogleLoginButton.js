@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Alert } from 'react-native';
+import { StyleSheet, Alert, Platform } from 'react-native';
 import {
   GoogleSignin,
   GoogleSigninButton,
@@ -9,6 +9,8 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import showErrorAlert from './Toast';
 import { setUserTracking, trackLogin } from './useAnalytics';
+// import { getUniqueId, getManufacturer } from 'react-native-device-info';
+import DeviceInfo from 'react-native-device-info';
 
 // ── Approver emails ───────────────────────────────────────────────────────
 // Users with these emails will automatically get 'approver' role
@@ -67,34 +69,44 @@ const GoogleLoginButton = props => {
   const saveUserToFirestore = async user => {
     try {
       const userRef = firestore().collection('users').doc(user.uid);
+      console.log(userRef, 'userRef');
       const doc = await userRef.get();
+
+      console.log(doc, 'DOCS>>>');
 
       const role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
         ? 'approver'
         : 'employee';
 
-      if (!doc.exists) {
-        // ✅ FIRST TIME → create user
-        await userRef.set({
-          uid: user.uid,
-          displayName: user.displayName || '',
-          email: user.email || '',
-          photoURL: user.photoURL || '',
-          phoneNumber: user.phoneNumber || '', // safe here
-          createdAt: user?.metadata?.creationTime,
-          role: role,
-          lastLogin: user?.metadata?.lastSignInTime,
-        });
-
-        console.log('User created ✅');
-      } else {
-        // ✅ EXISTING USER → only update minimal fields
-        console.log('User updated ✅');
+      if (doc.exists) {
         await userRef.update({
           lastLogin: user?.metadata?.lastSignInTime,
+          platform: Platform.OS,
+          platformVersion: Platform.Version,
+          // manufacturer: DeviceInfo.getManufacturer(),
         });
-
-        console.log('User already exists ✅ (updated lastLogin only)');
+        console.log('User updated ✅');
+      } else {
+        console.log('User created ✅');
+        await firestore()
+          .collection('users')
+          .doc(user.uid)
+          .set(
+            {
+              uid: user.uid,
+              displayName: user.displayName || '',
+              email: user.email || '',
+              photoURL: user.photoURL || '',
+              phoneNumber: user.phoneNumber || '',
+              lastLogin: user?.metadata?.lastSignInTime,
+              createdAt: user?.metadata?.creationTime,
+              role: role,
+              platform: Platform.OS,
+              platformVersion: Platform.Version,
+              // manufacturer: DeviceInfo.getManufacturer(),
+            },
+            { merge: true },
+          );
       }
 
       await setUserTracking();
@@ -103,6 +115,37 @@ const GoogleLoginButton = props => {
       console.log('Firestore save error:', error);
     }
   };
+
+  // const saveUserToFirestore = async user => {
+  //   try {
+  //     const role = APPROVER_EMAILS.includes(user.email?.toLowerCase())
+  //       ? 'approver'
+  //       : 'employee';
+
+  // await firestore()
+  //   .collection('users')
+  //   .doc(user.uid)
+  //   .set(
+  //     {
+  //       uid: user.uid,
+  //       displayName: user.displayName || '',
+  //       email: user.email || '',
+  //       photoURL: user.photoURL || '',
+  //       phoneNumber: user.phoneNumber || '',
+  //       lastLogin: user?.metadata?.lastSignInTime,
+  //       createdAt: user?.metadata?.creationTime,
+  //       role: role,
+  //     },
+  //     { merge: true },
+  //   );
+  //     // showErrorAlert("Fi")
+  //     console.log('User saved ✅ Role:', role);
+  //     onSuccess(user);
+  //   } catch (error) {
+  //     console.log('Firestore save error:', error);
+  //   }
+  // };
+
   const signIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
@@ -128,7 +171,6 @@ const GoogleLoginButton = props => {
 
       showErrorAlert('Login Successful');
 
-      console.log('Firebase session created ✅');
       await saveUserToFirestore(userCredential.user);
     } catch (error) {
       console.log('Sign-in error:', error);

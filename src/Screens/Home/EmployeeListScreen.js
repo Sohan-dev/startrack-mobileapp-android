@@ -67,22 +67,10 @@ const ProfileModal = ({ visible, employee, onClose }) => {
     Linking.openURL(`mailto:${employee.email}`);
   };
 
-  // const handleWhatsApp = () => {
-  //   if (!employee.phoneNumber) return;
-  //   const phone = employee.phoneNumber.replace(/[^0-9]/g, '');
-  //   Linking.openURL(`whatsapp://send?phone=91${phone}`);
-  // };
-
   const handleWhatsApp = () => {
     if (!employee.phoneNumber) return;
-
-    // ✅ Clean number — remove spaces, dashes, brackets
     const phone = employee.phoneNumber.replace(/[^0-9]/g, '');
-
-    // ✅ Add country code if not present
     const fullPhone = phone.startsWith('91') ? phone : `91${phone}`;
-
-    // ✅ Try wa.me link — works on all devices
     const url = `https://wa.me/${fullPhone}`;
 
     Linking.canOpenURL(url)
@@ -90,7 +78,6 @@ const ProfileModal = ({ visible, employee, onClose }) => {
         if (supported) {
           Linking.openURL(url);
         } else {
-          // ✅ Fallback — direct whatsapp intent
           Linking.openURL(`whatsapp://send?phone=${fullPhone}`);
         }
       })
@@ -570,7 +557,7 @@ export default function EmployeeListScreen(props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <MyStatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -643,7 +630,7 @@ export default function EmployeeListScreen(props) {
           setSelectedEmployee(null);
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

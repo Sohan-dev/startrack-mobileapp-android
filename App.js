@@ -6,6 +6,7 @@ import StackNavigator from './src/Navigation/StackNavigator';
 import { getToken } from './src/redux/action/TokenAction';
 import { useDispatch } from 'react-redux';
 import { logScreen } from './src/Utils/useAnalytics';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 LogBox.ignoreAllLogs();
 export default function App() {
   const dispatch = useDispatch();
@@ -18,17 +19,19 @@ export default function App() {
     }, 1500);
   }, []);
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      onStateChange={async () => {
-        const currentRoute = navigationRef.getCurrentRoute();
-        if (currentRoute?.name) {
-          await logScreen(currentRoute.name);
-          console.log('📊 Screen tracked:', currentRoute.name);
-        }
-      }}
-    >
-      <StackNavigator />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer
+        ref={navigationRef}
+        onStateChange={async () => {
+          const currentRoute = navigationRef.getCurrentRoute();
+          if (currentRoute?.name) {
+            await logScreen(currentRoute.name);
+            console.log('📊 Screen tracked:', currentRoute.name);
+          }
+        }}
+      >
+        <StackNavigator />
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

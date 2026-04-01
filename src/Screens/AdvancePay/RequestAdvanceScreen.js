@@ -14,7 +14,6 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -25,7 +24,7 @@ const APPROVERS = [
   { name: 'Amit Das', email: 'amit@startrackautomation.in' },
   { name: 'Aparesh Mondal', email: 'aparesh@startrackautomation.in' },
   { name: 'Manoj Dasgupta', email: 'manoj@startrackautomation.in' },
-  { name: 'Shubhankar(Developer)', email: 'shubhankarkoner.sta@gmail.com' },
+  // { name: 'Shubhankar(Developer)', email: 'shubhankarkoner.sta@gmail.com' },
   // {
   //   name: 'Amit Mondal(Tester)',
   //   email: 'amitmondal.sta@gmail.com',
@@ -83,7 +82,6 @@ const ApproverModal = ({ visible, selected, onSelect, onClose }) => (
 export default function RequestAdvanceScreen(props) {
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState(null);
-  const [customReason, setCustomReason] = useState('');
   const [approver, setApprover] = useState(null);
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -229,7 +227,7 @@ export default function RequestAdvanceScreen(props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <MyStatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -250,11 +248,12 @@ export default function RequestAdvanceScreen(props) {
       </Animated.View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
         >
           {/* Amount Card */}
@@ -437,7 +436,7 @@ export default function RequestAdvanceScreen(props) {
           </Animated.View>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

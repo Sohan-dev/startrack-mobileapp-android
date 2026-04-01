@@ -8,9 +8,11 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  FlatList,
   Modal,
   useColorScheme,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import auth from '@react-native-firebase/auth';
@@ -31,6 +33,21 @@ const EXPENSE_TYPES = [
   { id: 'food', label: 'Food', icon: 'food', color: '#EF4444' },
   { id: 'travel', label: 'Travel', icon: 'airplane', color: '#3B82F6' },
   { id: 'medical', label: 'Medical', icon: 'pill', color: '#10B981' },
+  { id: 'conveyance', label: 'Conveyance', icon: 'bus', color: '#0EA5E9' },
+  { id: 'upi_cash', label: 'UPI/Cash Pay', icon: 'cash', color: '#14B8A6' },
+  { id: 'vehicle_hire', label: 'Vehicle Hire', icon: 'car', color: '#F97316' },
+  {
+    id: 'office_expense',
+    label: 'Office Expense',
+    icon: 'office-building',
+    color: '#6366F1',
+  },
+  {
+    id: 'factory_expense',
+    label: 'Factory Expense',
+    icon: 'factory',
+    color: '#78716C',
+  },
   { id: 'other', label: 'Other', icon: 'dots-horizontal', color: '#6B7280' },
 ];
 
@@ -50,11 +67,7 @@ const APPROVERS = [
   // {
   //   name: 'Shubhankar(Developer)',
   //   email: 'shubhankarkoner.sta@gmail.com',
-  // },
-  // {
-  //   name: 'Amit Mondal(Tester)',
-  //   email: 'amitmondal.sta@gmail.com',
-  // },
+  // }
 ];
 
 // ── Type Selector Modal ───────────────────────────────────────────────────
@@ -67,13 +80,23 @@ const TypeModal = ({ visible, onSelect, onClose, selected }) => (
     />
     <View style={styles.sheet}>
       <View style={styles.sheetHandle} />
-      <Text style={styles.sheetTitle}>Select Expense Type</Text>
-      <View style={styles.typeGrid}>
-        {EXPENSE_TYPES.map(type => {
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={styles.sheetTitle}>Select Expense Type</Text>
+        <TouchableOpacity style={styles.removeBtn} onPress={() => onClose()}>
+          <Icon name="close-circle" size={20} color="#FCA5A5" />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={EXPENSE_TYPES}
+        keyExtractor={item => item.id}
+        showsVerticalScrollIndicator={false}
+        columnWrapperStyle={styles.typeGridRow}
+        contentContainerStyle={styles.typeGridContainer}
+        renderItem={({ item: type }) => {
           const isActive = selected === type.id;
           return (
             <TouchableOpacity
-              key={type.id}
               style={[
                 styles.typeChip,
                 isActive && {
@@ -104,8 +127,8 @@ const TypeModal = ({ visible, onSelect, onClose, selected }) => (
               </Text>
             </TouchableOpacity>
           );
-        })}
-      </View>
+        }}
+      />
     </View>
   </Modal>
 );
@@ -118,7 +141,7 @@ const ApproverModal = ({ visible, onSelect, onClose, selected }) => (
       activeOpacity={1}
       onPress={onClose}
     />
-    <View style={styles.sheet}>
+    <View style={styles.sheet1}>
       <View style={styles.sheetHandle} />
       <Text style={styles.sheetTitle}>Select Approver</Text>
       {APPROVERS.map(approver => (
@@ -172,7 +195,10 @@ const EntryRow = ({ entry, onChange, onRemove, showRemove, index }) => {
           {entry.type ? (
             <>
               <Icon name={entry.type.icon} size={15} color={typeColor} />
-              <Text style={[styles.entryTypeText, { color: typeColor }]}>
+              <Text
+                style={[styles.entryTypeText, { color: typeColor }]}
+                numberOfLines={1}
+              >
                 {entry.type.label}
               </Text>
             </>
@@ -200,10 +226,9 @@ const EntryRow = ({ entry, onChange, onRemove, showRemove, index }) => {
         )}
       </View>
 
-      {/* ✅ Description input below */}
       <TextInput
         style={styles.entryDescInput}
-        placeholder="Add description..."
+        placeholder="Add short description"
         placeholderTextColor="#C4C4C4"
         value={entry.description || ''}
         onChangeText={val => onChange('description', val)}
@@ -230,7 +255,6 @@ export default function AddExpenseScreen(props) {
   const nextId = React.useRef(2);
   const [loading, setLoading] = useState(false);
   const [showAnim, setShowAnim] = useState(false);
-  const isDarkMode = useColorScheme() === 'dark';
 
   // ── Advance Balance ───────────────────────────────────────────────────
   const [advanceBalance, setAdvanceBalance] = useState(0);
@@ -367,11 +391,11 @@ export default function AddExpenseScreen(props) {
               usedInExpense: currentUsed + deductThis,
             });
 
-          console.log(
-            `✅ Advance ${advance.id}: usedInExpense updated to ${
-              currentUsed + deductThis
-            }`,
-          );
+          // console.log(
+          //   `✅ Advance ${advance.id}: usedInExpense updated to ${
+          //     currentUsed + deductThis
+          //   }`,
+          // );
         }
       }
 
@@ -412,8 +436,8 @@ export default function AddExpenseScreen(props) {
     });
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <MyStatusBar barStyle="light-content" />
+    <View style={styles.safe}>
+      <MyStatusBar barStyle="light-content" backgroundColor={'#E8453C'} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -461,18 +485,6 @@ export default function AddExpenseScreen(props) {
         {/* Expense Entries */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>Expense Entries</Text>
-          <TouchableOpacity
-            style={[
-              styles.addEntryBtn,
-              entries[entries.length - 1].amount === '' &&
-                styles.addEntryBtnDisabled,
-            ]}
-            onPress={addEntry}
-            disabled={entries[entries.length - 1].amount === ''}
-          >
-            <Icon name="plus" size={16} color="#fff" />
-            <Text style={styles.addEntryText}>Add Row</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.entriesCard}>
@@ -495,6 +507,18 @@ export default function AddExpenseScreen(props) {
             />
           ))}
         </View>
+        <TouchableOpacity
+          style={[
+            styles.addEntryBtn,
+            entries[entries.length - 1].amount === '' &&
+              styles.addEntryBtnDisabled,
+          ]}
+          onPress={addEntry}
+          disabled={entries[entries.length - 1].amount === ''}
+        >
+          <Icon name="plus" size={16} color="#fff" />
+          <Text style={styles.addEntryText}>Add Row</Text>
+        </TouchableOpacity>
 
         {/* Approver */}
         <Text style={styles.sectionLabel}>Approver</Text>
@@ -642,7 +666,7 @@ export default function AddExpenseScreen(props) {
           />
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -728,7 +752,7 @@ const styles = StyleSheet.create({
     marginBottom: normalise(10),
   },
   entryDescInput: {
-    marginLeft: normalise(29), // aligns with type/amount (skips index circle)
+    marginLeft: normalise(29),
     backgroundColor: '#F9FAFB',
     borderRadius: 8,
     borderWidth: 1,
@@ -742,7 +766,6 @@ const styles = StyleSheet.create({
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    // marginBottom: 0, // ✅ changed from normalise(10) to 0
     gap: 8,
   },
   dateTextWrap: { flex: 1 },
@@ -769,12 +792,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: normalise(12),
     paddingVertical: normalise(7),
+    marginTop: normalise(15),
+    justifyContent: 'center',
   },
   addEntryBtnDisabled: { backgroundColor: '#FCA5A5' },
   addEntryText: {
     color: '#fff',
     fontSize: normalise(12),
     fontWeight: '700',
+    justifyContent: 'center',
   },
 
   // Entries Card
@@ -805,13 +831,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
 
-  // Entry Row
-  entryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: normalise(10),
-    gap: 8,
-  },
+  // // Entry Row
+  // entryRow: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   marginBottom: normalise(10),
+  //   gap: 8,
+  // },
   entryIndex: {
     width: 24,
     height: 24,
@@ -1030,6 +1056,17 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: normalise(20),
+    marginBottom: normalise(40),
+
+    // paddingBottom: normalise(36),
+  },
+  sheet1: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: normalise(20),
+    // marginBottom: normalise(40),
+
     paddingBottom: normalise(36),
   },
   sheetHandle: {
@@ -1052,14 +1089,15 @@ const styles = StyleSheet.create({
   typeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
     paddingHorizontal: normalise(12),
     paddingVertical: normalise(10),
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    minWidth: '44%',
+    minWidth: '40%',
+    marginBottom: normalise(10),
   },
   typeIconWrap: {
     width: 32,

@@ -134,7 +134,30 @@ export default function NotificationScreen(props) {
   const headerOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    fetchNotifications();
+    const uid = auth().currentUser?.uid;
+    if (!uid) return;
+
+    setLoading(true);
+
+    const unsubscribe = firestore()
+      .collection('notifications')
+      .where('toUid', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        snap => {
+          const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setNotifications(data);
+          setUnreadCount(data.filter(n => !n.read).length);
+          setLoading(false);
+          setRefreshing(false);
+        },
+        error => {
+          console.log('Error listening to notifications:', error);
+          setLoading(false);
+          setRefreshing(false);
+        },
+      );
+
     Animated.parallel([
       Animated.spring(headerAnim, {
         toValue: 0,
@@ -148,28 +171,9 @@ export default function NotificationScreen(props) {
         useNativeDriver: true,
       }),
     ]).start();
+
+    return () => unsubscribe();
   }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const uid = auth().currentUser?.uid;
-
-      const snap = await firestore()
-        .collection('notifications')
-        .where('toUid', '==', uid)
-        .orderBy('createdAt', 'desc')
-        .get();
-
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.read).length);
-    } catch (error) {
-      console.log('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   const markAsRead = async item => {
     if (item.read) {
@@ -220,11 +224,6 @@ export default function NotificationScreen(props) {
     }
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchNotifications();
-  }, []);
-
   const renderHeader = () => (
     <View style={styles.listHeader}>
       <Text style={styles.listHeaderText}>
@@ -240,7 +239,7 @@ export default function NotificationScreen(props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <MyStatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -262,9 +261,7 @@ export default function NotificationScreen(props) {
             <Text style={styles.headerSubtitle}>{unreadCount} unread</Text>
           )}
         </View>
-        <TouchableOpacity style={styles.headerBtn} onPress={onRefresh}>
-          <Icon name="refresh" size={22} color="#fff" />
-        </TouchableOpacity>
+        <View />
       </Animated.View>
 
       {loading ? (
@@ -289,16 +286,9 @@ export default function NotificationScreen(props) {
           }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#E8453C']}
-            />
-          }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

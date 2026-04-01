@@ -179,6 +179,7 @@ export default function Dashboard(props) {
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [advanceBalance, setAdvanceBalance] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const headerAnim = useRef(new Animated.Value(-60)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -210,10 +211,151 @@ export default function Dashboard(props) {
 
   usePushNotification(props.navigation);
 
+  // useEffect(() => {
+  //   fetchUserData();
+  //   fetchExpenseCounts();
+  //   fetchAdvanceBalance();
+  //   Animated.parallel([
+  //     Animated.spring(headerAnim, {
+  //       toValue: 0,
+  //       tension: 60,
+  //       friction: 10,
+  //       useNativeDriver: true,
+  //     }),
+  //     Animated.timing(headerOpacity, {
+  //       toValue: 1,
+  //       duration: 400,
+  //       useNativeDriver: true,
+  //     }),
+  //   ]).start();
+  // }, []);
+
   useEffect(() => {
-    fetchUserData();
-    fetchExpenseCounts();
-    fetchAdvanceBalance();
+    const unsubscribers = [];
+
+    const setupListeners = async () => {
+      try {
+        const uid = auth().currentUser?.uid;
+        if (!uid) return;
+
+        // 1. Real-time user data
+        const userUnsub = firestore()
+          .collection('users')
+          .doc(uid)
+          .onSnapshot(
+            doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                setUserData(data);
+
+                // 2. Real-time expense counts based on role
+                const role = data?.role;
+                const currentUserEmail = auth().currentUser?.email;
+
+                if (role === 'approver') {
+                  const expenseUnsub = firestore()
+                    .collectionGroup('expenses')
+                    .onSnapshot(
+                      snap => {
+                        const all = snap.docs.map(d => d.data());
+                        setPendingCount(
+                          all.filter(
+                            e =>
+                              e.status === 'Pending' &&
+                              e.approverEmail === currentUserEmail,
+                          ).length,
+                        );
+                        setApprovedCount(
+                          all.filter(
+                            e =>
+                              e.status === 'Approved' &&
+                              e.approverEmail === currentUserEmail,
+                          ).length,
+                        );
+                        setRejectedCount(
+                          all.filter(
+                            e =>
+                              e.status === 'Rejected' &&
+                              e.approverEmail === currentUserEmail,
+                          ).length,
+                        );
+                        setLoading(false);
+                      },
+                      error => {
+                        console.log('Expense listener error:', error);
+                        setLoading(false);
+                      },
+                    );
+                  unsubscribers.push(expenseUnsub);
+                } else {
+                  const expenseUnsub = firestore()
+                    .collection('users')
+                    .doc(uid)
+                    .collection('expenses')
+                    .onSnapshot(
+                      snap => {
+                        const all = snap.docs.map(d => d.data());
+                        setPendingCount(
+                          all.filter(e => e.status === 'Pending').length,
+                        );
+                        setApprovedCount(
+                          all.filter(e => e.status === 'Approved').length,
+                        );
+                        setRejectedCount(
+                          all.filter(e => e.status === 'Rejected').length,
+                        );
+                        setLoading(false);
+                      },
+                      error => {
+                        console.log('Expense listener error:', error);
+                        setLoading(false);
+                      },
+                    );
+                  unsubscribers.push(expenseUnsub);
+
+                  // 3. Real-time advance balance (employee only)
+                  const advanceUnsub = firestore()
+                    .collection('users')
+                    .doc(uid)
+                    .collection('advances')
+                    .onSnapshot(
+                      snap => {
+                        let totalBalance = 0;
+                        snap.forEach(doc => {
+                          const d = doc.data();
+                          if (d.status !== 'Approved') return;
+                          const paid = parseFloat(d.paidAmount ?? 0);
+                          const used = parseFloat(d.usedInExpense ?? 0);
+                          const available = paid - used;
+                          if (available > 0) totalBalance += available;
+                        });
+                        setAdvanceBalance(totalBalance);
+                      },
+                      error => {
+                        console.log('Advance listener error:', error);
+                      },
+                    );
+                  unsubscribers.push(advanceUnsub);
+                }
+              }
+              setLoading(false);
+            },
+            error => {
+              console.log('User listener error:', error);
+              setLoading(false);
+            },
+          );
+
+        unsubscribers.push(userUnsub);
+      } catch (error) {
+        console.log('Setup error:', error);
+        setLoading(false);
+      }
+    };
+
+    setupListeners();
+
+    // Animate header
     Animated.parallel([
       Animated.spring(headerAnim, {
         toValue: 0,
@@ -227,12 +369,39 @@ export default function Dashboard(props) {
         useNativeDriver: true,
       }),
     ]).start();
+
+    // Cleanup all listeners on unmount
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, []);
+
+  useEffect(() => {
+    const uid = auth().currentUser?.uid;
+    if (!uid) return;
+
+    const unsubscribe = firestore()
+      .collection('notifications')
+      .where('toUid', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        snap => {
+          const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setUnreadCount(data.filter(n => !n.read).length);
+          console.log(data.filter(n => !n.read).length, 'NOTIII ');
+        },
+        error => {
+          console.log('Error listening to notifications:', error);
+        },
+      );
+
+    return () => unsubscribe();
   }, []);
 
   const fetchUserData = async () => {
     try {
       const uid = auth().currentUser?.uid;
-      const doc = await firestore().collection('users').doc(uid).get();
+      const doc = await firestore().collection('users').doc(uid).onSnapshot();
       if (doc.exists) setUserData(doc.data());
     } catch (error) {
       console.log('Error fetching user:', error);
@@ -289,7 +458,6 @@ export default function Dashboard(props) {
     }
   };
 
-  // ✅ Fetch available advance balance — employee only
   const fetchAdvanceBalance = async () => {
     try {
       const uid = auth().currentUser?.uid;
@@ -334,7 +502,7 @@ export default function Dashboard(props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <MyStatusBar barStyle="light-content" backgroundColor={'#E8453C'} />
 
       {/* Header */}
@@ -369,7 +537,13 @@ export default function Dashboard(props) {
             }
           >
             <Icon name="bell-outline" size={22} color="#fff" />
-            <View style={styles.notifDot} />
+            {unreadCount > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.headerBtn, styles.avatarBtn]}
@@ -459,7 +633,7 @@ export default function Dashboard(props) {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -494,6 +668,25 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
+  },
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#FFE234',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#E8453C',
+  },
+  notifBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#1F2937',
   },
   headerLeft: { flex: 1 },
   greetingText: { color: 'rgba(255,255,255,0.8)', fontSize: normalise(12) },

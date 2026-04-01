@@ -24,6 +24,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import showErrorAlert from '../../Utils/Toast';
 import { launchImageLibrary } from 'react-native-image-picker';
 import storage from '@react-native-firebase/storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 
 const FIELDS = [
@@ -63,6 +64,7 @@ export default function ProfileScreen(props) {
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
   const headerAnim = useRef(new Animated.Value(-50)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch();
@@ -89,6 +91,7 @@ export default function ProfileScreen(props) {
       const uid = auth().currentUser?.uid;
       const doc = await firestore().collection('users').doc(uid).get();
       if (doc.exists) {
+        console.log(doc.data(), 'PROFILE');
         setUserData(doc.data());
         setEditData(doc.data());
       }
@@ -192,35 +195,6 @@ export default function ProfileScreen(props) {
       photoURL: imageUrl,
     });
   };
-
-  // const deleteOldImage = async path => {
-  //   if (!path) return;
-
-  //   try {
-  //     await storage().ref(path).delete();
-  //   } catch (error) {
-  //     console.log('Delete failed:', error);
-  //   }
-  // };
-
-  const deleteOldProfilePic = async oldImageFullUri => {
-    const path = `profileImages/${oldImageFullUri}`;
-    console.log(path, 'delete path');
-    try {
-      await storage().ref(path).delete();
-      // Create a reference to the file to delete
-      // const imageRef = storage().refFromURL(path);
-
-      // Delete the file
-      // await imageRef.delete();
-
-      console.log('Old profile picture deleted successfully!');
-    } catch (error) {
-      // Handle cases where the file might not exist
-      console.error('Error deleting old image: ', error);
-    }
-  };
-
   const handleUpdateProfilePic = async () => {
     try {
       // await deleteOldProfilePic(userData?.photoURL);
@@ -249,7 +223,7 @@ export default function ProfileScreen(props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <MyStatusBar barStyle="light-content" backgroundColor={'#E8453C'} />
 
       {/* Header */}
@@ -330,7 +304,7 @@ export default function ProfileScreen(props) {
           </View>
 
           {/* UPI ID quick display badge */}
-          {isApprover && userData.upiId ? (
+          {!isApprover && userData.upiId ? (
             <View style={styles.upiBadge}>
               <Icon name="contactless-payment" size={13} color="#6366F1" />
               <Text style={styles.upiText}>{userData.upiId}</Text>
@@ -498,7 +472,7 @@ export default function ProfileScreen(props) {
 
         <View style={{ height: normalise(24) }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

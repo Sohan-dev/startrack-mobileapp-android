@@ -536,7 +536,7 @@ export default function AllExpensesScreen(props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <MyStatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -584,7 +584,7 @@ export default function AllExpensesScreen(props) {
           }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

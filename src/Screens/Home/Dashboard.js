@@ -211,25 +211,6 @@ export default function Dashboard(props) {
 
   usePushNotification(props.navigation);
 
-  // useEffect(() => {
-  //   fetchUserData();
-  //   fetchExpenseCounts();
-  //   fetchAdvanceBalance();
-  //   Animated.parallel([
-  //     Animated.spring(headerAnim, {
-  //       toValue: 0,
-  //       tension: 60,
-  //       friction: 10,
-  //       useNativeDriver: true,
-  //     }),
-  //     Animated.timing(headerOpacity, {
-  //       toValue: 1,
-  //       duration: 400,
-  //       useNativeDriver: true,
-  //     }),
-  //   ]).start();
-  // }, []);
-
   useEffect(() => {
     const unsubscribers = [];
 
@@ -397,90 +378,6 @@ export default function Dashboard(props) {
 
     return () => unsubscribe();
   }, []);
-
-  const fetchUserData = async () => {
-    try {
-      const uid = auth().currentUser?.uid;
-      const doc = await firestore().collection('users').doc(uid).onSnapshot();
-      if (doc.exists) setUserData(doc.data());
-    } catch (error) {
-      console.log('Error fetching user:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchExpenseCounts = async () => {
-    try {
-      var role = '';
-      const uid = auth().currentUser?.uid;
-      const doc = await firestore().collection('users').doc(uid).get();
-      if (doc.exists) role = doc.data()?.role;
-
-      if (role === 'approver') {
-        const currentUserEmail = auth().currentUser?.email;
-        const snap = await firestore().collectionGroup('expenses').get();
-        const all = snap.docs.map(d => d.data());
-
-        setPendingCount(
-          all.filter(
-            e => e.status === 'Pending' && e.approverEmail === currentUserEmail,
-          ).length,
-        );
-        setApprovedCount(
-          all.filter(
-            e =>
-              e.status === 'Approved' && e.approverEmail === currentUserEmail,
-          ).length,
-        );
-        setRejectedCount(
-          all.filter(
-            e =>
-              e.status === 'Rejected' && e.approverEmail === currentUserEmail,
-          ).length,
-        );
-      } else {
-        const snap = await firestore()
-          .collection('users')
-          .doc(uid)
-          .collection('expenses')
-          .get();
-        const all = snap.docs.map(d => d.data());
-
-        setPendingCount(all.filter(e => e.status === 'Pending').length);
-        setApprovedCount(all.filter(e => e.status === 'Approved').length);
-        setRejectedCount(all.filter(e => e.status === 'Rejected').length);
-      }
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      console.log('Error fetching counts:', error);
-    }
-  };
-
-  const fetchAdvanceBalance = async () => {
-    try {
-      const uid = auth().currentUser?.uid;
-      const snap = await firestore()
-        .collection('users')
-        .doc(uid)
-        .collection('advances')
-        .get();
-
-      let totalBalance = 0;
-      snap.forEach(doc => {
-        const d = doc.data();
-        if (d.status !== 'Approved') return;
-        const paid = parseFloat(d.paidAmount ?? 0);
-        const used = parseFloat(d.usedInExpense ?? 0);
-        const available = paid - used;
-        if (available > 0) totalBalance += available;
-      });
-      setAdvanceBalance(totalBalance);
-    } catch (error) {
-      console.log('Advance balance error:', error);
-    }
-  };
 
   const greeting = () => {
     const hour = new Date().getHours();

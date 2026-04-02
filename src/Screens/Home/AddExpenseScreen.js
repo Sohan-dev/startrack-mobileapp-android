@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Modal,
   useColorScheme,
   ActivityIndicator,
+  BackHandler,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,6 +26,7 @@ import normalise from '../../Utils/Dimen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { sendNotificationToApprover } from '../../Utils/sendNotification';
 import { trackExpenseSubmit } from '../../Utils/useAnalytics';
+import { useFocusEffect } from '@react-navigation/native';
 
 // ── Expense Types ─────────────────────────────────────────────────────────
 const EXPENSE_TYPES = [
@@ -64,10 +66,10 @@ const APPROVERS = [
     name: 'Manoj Dasgupta',
     email: 'manoj@startrackautomation.in',
   },
-  // {
-  //   name: 'Shubhankar(Developer)',
-  //   email: 'shubhankarkoner.sta@gmail.com',
-  // }
+  {
+    name: 'Shubhankar(Developer)',
+    email: 'shubhankarkoner.sta@gmail.com',
+  },
 ];
 
 // ── Type Selector Modal ───────────────────────────────────────────────────
@@ -252,7 +254,8 @@ export default function AddExpenseScreen(props) {
   const [approver, setApprover] = useState(null);
   const [description, setDescription] = useState('');
   const [showApproverModal, setShowApproverModal] = useState(false);
-  const nextId = React.useRef(2);
+  const nextId = useRef(2);
+  const backPressedOnce = useRef(false);
   const [loading, setLoading] = useState(false);
   const [showAnim, setShowAnim] = useState(false);
 
@@ -434,6 +437,53 @@ export default function AddExpenseScreen(props) {
       month: 'short',
       year: 'numeric',
     });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        // if (backPressedOnce.current) {
+        //   BackHandler.exitApp();
+        //   return true;
+
+        // }
+        backPressedOnce.current = true;
+        handleDiscard();
+        // showErrorAlert('Press back again to exit');
+        // setTimeout(() => {
+        //   backPressedOnce.current = false;
+        // }, 2000);
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+      return () => subscription.remove();
+    }, []),
+  );
+
+  const handleDiscard = async () => {
+    Alert.alert(
+      'Discard',
+      'Are you sure you want to discard changes?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Discard Changes',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              props.navigation.goBack();
+            } catch (error) {
+              console.log(error);
+            }
+          },
+        },
+      ],
+      { cancelable: false },
+    );
+  };
 
   return (
     <View style={styles.safe}>

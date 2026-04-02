@@ -773,7 +773,7 @@ export default function PendingAdvancesScreen(props) {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <MyStatusBar barStyle="light-content" />
 
       <Animated.View
@@ -846,7 +846,7 @@ export default function PendingAdvancesScreen(props) {
         }}
         onConfirm={processAction}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

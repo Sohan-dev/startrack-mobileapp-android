@@ -512,13 +512,6 @@ export default function MyAdvancesScreen(props) {
           }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          // refreshControl={
-          //   <RefreshControl
-          //     refreshing={refreshing}
-          //     onRefresh={onRefresh}
-          //     colors={['#E8453C']}
-          //   />
-          // }
         />
       )}
     </View>

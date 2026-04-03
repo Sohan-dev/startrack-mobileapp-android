@@ -13,9 +13,7 @@ export default function App() {
   const navigationRef = useRef();
   useEffect(() => {
     setTimeout(() => {
-      //  initPusher();
       dispatch(getToken());
-      //  crashlytics().log('Token feched from local storage');
     }, 1500);
   }, []);
   return (

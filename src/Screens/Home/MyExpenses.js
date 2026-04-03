@@ -96,7 +96,6 @@ function ExpenseCard({ item, index }) {
         },
       ]}
     >
-      <MyStatusBar barStyle="light-content" backgroundColor={'#E8453C'} />
       <TouchableOpacity
         onPress={() =>
           navigation.navigate(EXPENSE_NAVIGATION.my_expense_edit_screen, {

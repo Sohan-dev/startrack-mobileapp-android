@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Animated,
   BackHandler,
+  Image,
 } from 'react-native';
 import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
@@ -434,11 +435,7 @@ export default function Dashboard(props) {
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.headerBtn}
-            onPress={() =>
-              props.navigation.navigate(
-                DASHBOARD_NAVIGATION.app_notification_list,
-              )
-            }
+            onPress={() => props.navigation.navigate('NotificationsTab')}
           >
             <Icon name="bell-outline" size={22} color="#fff" />
             {unreadCount > 0 && (
@@ -451,11 +448,18 @@ export default function Dashboard(props) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.headerBtn, styles.avatarBtn]}
-            onPress={() =>
-              props.navigation.navigate(PROFILE_NAVIGATION.app_profile_screen)
-            }
+            onPress={() => props.navigation.navigate('ProfileTab')}
           >
-            <Icon name="account-outline" size={22} color="#fff" />
+            {/* <Icon name="account-outline" size={22} color="#fff" /> */}
+            <Image
+              source={{ uri: userData.photoURL }}
+              resizeMode="cover"
+              style={{
+                width: normalise(30),
+                height: normalise(30),
+                borderRadius: normalise(25),
+              }}
+            />
           </TouchableOpacity>
         </View>
       </Animated.View>

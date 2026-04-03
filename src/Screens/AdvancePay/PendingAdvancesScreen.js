@@ -16,7 +16,6 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -98,7 +97,7 @@ const ActionModal = ({ visible, advance, onClose, onConfirm }) => {
           });
         },
       });
-      return; // ✅ Don't call onConfirm directly for UPI
+      return;
     }
 
     // Cash / Net Banking — confirm directly

@@ -441,17 +441,8 @@ export default function AddExpenseScreen(props) {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        // if (backPressedOnce.current) {
-        //   BackHandler.exitApp();
-        //   return true;
-
-        // }
         backPressedOnce.current = true;
         handleDiscard();
-        // showErrorAlert('Press back again to exit');
-        // setTimeout(() => {
-        //   backPressedOnce.current = false;
-        // }, 2000);
         return true;
       };
 
@@ -802,7 +793,7 @@ const styles = StyleSheet.create({
     marginBottom: normalise(10),
   },
   entryDescInput: {
-    marginLeft: normalise(29),
+    marginLeft: normalise(28),
     backgroundColor: '#F9FAFB',
     borderRadius: 8,
     borderWidth: 1,
@@ -812,6 +803,7 @@ const styles = StyleSheet.create({
     fontSize: normalise(12),
     color: '#6B7280',
     marginTop: normalise(4),
+    height: 45,
   },
   entryRow: {
     flexDirection: 'row',

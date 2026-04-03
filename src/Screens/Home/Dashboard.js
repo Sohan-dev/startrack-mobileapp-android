@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   ADVANCE_PAY_NAVIGATION,
@@ -103,6 +102,14 @@ const APPROVER_MENU = [
     path: DASHBOARD_NAVIGATION.app_grid_employee_list,
     color: '#A78BFA',
     bg: '#F5F0FF',
+  },
+  {
+    id: 5,
+    title: 'Generate Report',
+    icon: 'microsoft-excel',
+    path: DASHBOARD_NAVIGATION.app_report_generation,
+    color: '#10B981',
+    bg: '#F0FFF4',
   },
 ];
 

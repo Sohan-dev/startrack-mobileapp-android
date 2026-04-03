@@ -23,6 +23,7 @@ import MyAdvancesScreen from '../Screens/AdvancePay/MyAdvancesScreen';
 import PendingAdvancesScreen from '../Screens/AdvancePay/PendingAdvancesScreen';
 import EmployeeListScreen from '../Screens/Home/EmployeeListScreen';
 import NotificationScreen from '../Screens/Home/NotificationScreen';
+import ReportGenerationScreen from '../Screens/Report/ReportGenerationScreen';
 
 const Stack = createStackNavigator();
 
@@ -100,6 +101,11 @@ export default function StackNavigator() {
         <Stack.Screen
           name={DASHBOARD_NAVIGATION.app_notification_list}
           component={NotificationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={DASHBOARD_NAVIGATION.app_report_generation}
+          component={ReportGenerationScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

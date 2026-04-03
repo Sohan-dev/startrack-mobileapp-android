@@ -18,10 +18,7 @@ import MyStatusBar from '../../Utils/StatusBar';
 import normalise from '../../Utils/Dimen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
 import XLSX from 'xlsx';
-import RNFS from '@dr.pogodin/react-native-fs';
-import Share from 'react-native-share';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
@@ -186,7 +183,6 @@ const generateExcel = async (expenses, employeeName, startDate, endDate) => {
     startDate,
   )}_${formatDateForFileName(endDate)}.xlsx`;
 
-  // ✅ Write to a temp path first
   const tempPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${fileName}`;
   await ReactNativeBlobUtil.fs.writeFile(tempPath, wbOut, 'base64');
 
@@ -201,11 +197,7 @@ const generateExcel = async (expenses, employeeName, startDate, endDate) => {
     tempPath,
   );
 
-  // ✅ Clean up temp file
   await ReactNativeBlobUtil.fs.unlink(tempPath).catch(() => {});
-
-  console.log(tempPath);
-
   // Return temp path for sharing (still accessible during this session)
   return { filePath: tempPath, fileName };
 };
